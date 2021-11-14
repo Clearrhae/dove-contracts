@@ -392,7 +392,7 @@ interface IStakingHelper {
     function stake( uint _amount, address _recipient ) external;
 }
 
-contract OlympusCVXBondDepository is Ownable {
+contract DoveCVXBondDepository is Ownable {
 
     using FixedPoint for *;
     using SafeERC20 for IERC20;
@@ -408,9 +408,9 @@ contract OlympusCVXBondDepository is Ownable {
 
     /* ======== STATE VARIABLES ======== */
 
-    address public immutable OHM; // token given as payment for bond
+    address public immutable DOVE; // token given as payment for bond
     address public immutable principal; // token used to create bond
-    address public immutable treasury; // mints OHM when receives principal
+    address public immutable treasury; // mints DOVE when receives principal
     address public immutable DAO; // receives profit share from bond
 
     address public staking; // to auto-stake payout
@@ -439,7 +439,7 @@ contract OlympusCVXBondDepository is Ownable {
 
     // Info for bond holder
     struct Bond {
-        uint payout; // OHM remaining to be paid
+        uint payout; // DOVE remaining to be paid
         uint vesting; // Blocks left to vest
         uint lastBlock; // Last interaction
         uint pricePaid; // In DAI, for front end viewing
@@ -458,13 +458,13 @@ contract OlympusCVXBondDepository is Ownable {
     /* ======== INITIALIZATION ======== */
 
     constructor ( 
-        address _OHM,
+        address _DOVE,
         address _principal,
         address _treasury, 
         address _DAO
     ) {
-        require( _OHM != address(0) );
-        OHM = _OHM;
+        require( _DOVE != address(0) );
+        DOVE = _DOVE;
         require( _principal != address(0) );
         principal = _principal;
         require( _treasury != address(0) );
@@ -594,7 +594,7 @@ contract OlympusCVXBondDepository is Ownable {
         uint value = ITreasury( treasury ).valueOf( principal, _amount );
         uint payout = payoutFor( value ); // payout to bonder is computed
 
-        require( payout >= 10000000, "Bond too small" ); // must be > 0.01 OHM ( underflow protection )
+        require( payout >= 10000000, "Bond too small" ); // must be > 0.01 DOVE ( underflow protection )
         require( payout <= maxPayout(), "Bond too large"); // size protection because there is no slippage
 
         /**
@@ -668,13 +668,13 @@ contract OlympusCVXBondDepository is Ownable {
      */
     function stakeOrSend( address _recipient, bool _stake, uint _amount ) internal returns ( uint ) {
         if ( !_stake ) { // if user does not want to stake
-            IERC20( OHM ).safeTransfer( _recipient, _amount ); // send payout
+            IERC20( DOVE ).safeTransfer( _recipient, _amount ); // send payout
         } else { // if user wants to stake
             if ( useHelper ) { // use if staking warmup is 0
-                IERC20( OHM ).approve( stakingHelper, _amount );
+                IERC20( DOVE ).approve( stakingHelper, _amount );
                 IStakingHelper( stakingHelper ).stake( _amount, _recipient );
             } else {
-                IERC20( OHM ).approve( staking, _amount );
+                IERC20( DOVE ).approve( staking, _amount );
                 IStaking( staking ).stake( _amount, _recipient );
             }
         }
@@ -722,7 +722,7 @@ contract OlympusCVXBondDepository is Ownable {
      *  @return uint
      */
     function maxPayout() public view returns ( uint ) {
-        return IERC20( OHM ).totalSupply().mul( terms.maxPayout ).div( 100000 );
+        return IERC20( DOVE ).totalSupply().mul( terms.maxPayout ).div( 100000 );
     }
 
     /**
@@ -760,11 +760,11 @@ contract OlympusCVXBondDepository is Ownable {
     }
 
     /**
-     *  @notice calculate current ratio of debt to OHM supply
+     *  @notice calculate current ratio of debt to DOVE supply
      *  @return debtRatio_ uint
      */
     function debtRatio() public view returns ( uint debtRatio_ ) {   
-        uint supply = IERC20( OHM ).totalSupply();
+        uint supply = IERC20( DOVE ).totalSupply();
         debtRatio_ = FixedPoint.fraction( 
             currentDebt().mul( 1e9 ), 
             supply
@@ -810,7 +810,7 @@ contract OlympusCVXBondDepository is Ownable {
     }
 
     /**
-     *  @notice calculate amount of OHM available for claim by depositor
+     *  @notice calculate amount of DOVE available for claim by depositor
      *  @param _depositor address
      *  @return pendingPayout_ uint
      */
@@ -828,11 +828,11 @@ contract OlympusCVXBondDepository is Ownable {
     /* ======= AUXILLIARY ======= */
 
     /**
-     *  @notice allow anyone to send lost tokens (excluding principal or OHM) to the DAO
+     *  @notice allow anyone to send lost tokens (excluding principal or DOVE) to the DAO
      *  @return bool
      */
     function recoverLostToken( address _token ) external returns ( bool ) {
-        require( _token != OHM );
+        require( _token != DOVE );
         require( _token != principal );
         IERC20( _token ).safeTransfer( DAO, IERC20( _token ).balanceOf( address(this) ) );
         return true;

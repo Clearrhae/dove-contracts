@@ -259,17 +259,17 @@ interface IBondingCalculator {
   function valuation( address pair_, uint amount_ ) external view returns ( uint _value );
 }
 
-contract OlympusBondingCalculator is IBondingCalculator {
+contract DoveBondingCalculator is IBondingCalculator {
 
     using FixedPoint for *;
     using SafeMath for uint;
     using SafeMath for uint112;
 
-    address public immutable OHM;
+    address public immutable DOVE;
 
-    constructor( address _OHM ) {
-        require( _OHM != address(0) );
-        OHM = _OHM;
+    constructor( address _DOVE ) {
+        require( _DOVE != address(0) );
+        DOVE = _DOVE;
     }
 
     function getKValue( address _pair ) public view returns( uint k_ ) {
@@ -296,11 +296,11 @@ contract OlympusBondingCalculator is IBondingCalculator {
         ( uint reserve0, uint reserve1, ) = IUniswapV2Pair( _pair ).getReserves();
 
         uint reserve;
-        if ( IUniswapV2Pair( _pair ).token0() == OHM ) {
+        if ( IUniswapV2Pair( _pair ).token0() == DOVE ) {
             reserve = reserve1;
         } else {
             reserve = reserve0;
         }
-        return reserve.mul( 2 * ( 10 ** IERC20( OHM ).decimals() ) ).div( getTotalValue( _pair ) );
+        return reserve.mul( 2 * ( 10 ** IERC20( DOVE ).decimals() ) ).div( getTotalValue( _pair ) );
     }
 }
