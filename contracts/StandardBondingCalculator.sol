@@ -267,9 +267,9 @@ contract DoveBondingCalculator is IBondingCalculator {
 
     address public immutable DOVE;
 
-    constructor( address _sDOVE ) {
-        require( _sDOVE != address(0) );
-        DOVE = _sDOVE;
+    constructor( address _DOVE ) {
+        require( _DOVE != address(0) );
+        DOVE = _DOVE;
     }
 
     function getKValue( address _pair ) public view returns( uint k_ ) {
