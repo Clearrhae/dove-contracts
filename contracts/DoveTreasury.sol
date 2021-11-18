@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity 0.7.5;
 
-import "./interfaces/IOtterTreasury.sol";
+import "./interfaces/IDoveTreasury.sol";
 
 import "./libraries/Ownable.sol";
 import "./libraries/SafeMath.sol";
@@ -15,7 +15,7 @@ interface IBondCalculator {
   function valuation( address pair_, uint amount_ ) external view returns ( uint _value );
 }
 
-contract OtterTreasury is Ownable, IOtterTreasury {
+contract DoveTreasury is Ownable, IDoveTreasury {
 
     using SafeMath for uint;
     using SafeERC20 for IERC20;

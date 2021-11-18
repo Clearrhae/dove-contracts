@@ -33,7 +33,7 @@ await hre.network.provider.request({ method: 'hardhat_impersonateAccount', param
 let multisig = await ethers.getSigner('0x929A27c46041196e1a49C7B459d63eC9A20cd879')
 let deployer = await ethers.getSigner()
 
-const Treasury = await ethers.getContractFactory('OtterTreasury')
+const Treasury = await ethers.getContractFactory('DoveTreasury')
 
 let oldTreasury = Treasury.attach('0xab328Ca61599974b0f577d1F8AB0129f2842d765').connect(multisig)
 let newTreasury = Treasury.attach('0x8ce47D56EAa1299d3e06FF3E04637449fFb01C9C').connect(deployer)
@@ -41,7 +41,7 @@ let newTreasury = Treasury.attach('0x8ce47D56EAa1299d3e06FF3E04637449fFb01C9C').
 const Migrator = await ethers.getContractFactory('ClamTokenMigrator')
 let migrator = Migrator.attach('0x4dF64BBe830168Ed257D0a1FA52900E038a37c4c').connect(deployer)
 
-const ERC20 = await ethers.getContractFactory('OtterClamERC20V2')
+const ERC20 = await ethers.getContractFactory('DoveClamERC20V2')
 let clam = ERC20.attach(addresses.OLD_CLAM_ADDRESS)
 let clam2 = ERC20.attach(addresses.CLAM_ADDRESS)
 let mai = ERC20.attach(addresses.MAI_ADDRESS)

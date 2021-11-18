@@ -9,7 +9,7 @@ interface ITreasury {
     function deposit( uint _amount, address _token, uint _profit ) external returns ( uint );
 }
 
-interface IPreOtterClam {
+interface IPreDoveClam {
     function burnFrom( address account_, uint256 amount_ ) external;
 }
 
@@ -69,7 +69,7 @@ contract ExercisePreClam is Ownable {
         require( info.max.sub( info.claimed ) >= _amount, 'Claimed over max' );
 
         IERC20( DAI ).safeTransferFrom( msg.sender, address( this ), _amount );
-        IPreOtterClam( pCLAM ).burnFrom( msg.sender, _amount );
+        IPreDoveClam( pCLAM ).burnFrom( msg.sender, _amount );
 
         IERC20( DAI ).approve( treasury, _amount );
         uint CLAMToSend = ITreasury( treasury ).deposit( _amount, DAI, 0 );

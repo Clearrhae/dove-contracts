@@ -6,7 +6,7 @@ import "../libraries/Ownable.sol";
 import "../libraries/ERC20.sol";
 
 
-contract PreOtterClamSales is Ownable {
+contract PreDoveClamSales is Ownable {
 
   using SafeMath for uint256;
   using SafeERC20 for IERC20;

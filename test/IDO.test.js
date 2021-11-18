@@ -38,11 +38,11 @@ describe.skip('IDO', () => {
 
     firstEpochTime = (await deployer.provider.getBlock()).timestamp + 100
 
-    const CLAM = await ethers.getContractFactory('OtterClamERC20')
+    const CLAM = await ethers.getContractFactory('DoveClamERC20')
     clam = await CLAM.deploy()
     await clam.setVault(deployer.address)
 
-    const StakedCLAM = await ethers.getContractFactory('StakedOtterClamERC20')
+    const StakedCLAM = await ethers.getContractFactory('StakedDoveClamERC20')
     sClam = await StakedCLAM.deploy()
 
     const DAI = await ethers.getContractFactory('DAI')
@@ -60,11 +60,11 @@ describe.skip('IDO', () => {
     lp = UniswapV2Pair.attach(pairAddress)
 
     const BondingCalculator = await ethers.getContractFactory(
-      'OtterBondingCalculator'
+      'DoveBondingCalculator'
     )
     const bondingCalculator = await BondingCalculator.deploy(clam.address)
 
-    const Treasury = await ethers.getContractFactory('OtterTreasury')
+    const Treasury = await ethers.getContractFactory('DoveTreasury')
     treasury = await Treasury.deploy(
       clam.address,
       dai.address,
@@ -74,7 +74,7 @@ describe.skip('IDO', () => {
     )
 
     const StakingDistributor = await ethers.getContractFactory(
-      'OtterStakingDistributor'
+      'DoveStakingDistributor'
     )
     stakingDistributor = await StakingDistributor.deploy(
       treasury.address,
@@ -83,7 +83,7 @@ describe.skip('IDO', () => {
       firstEpochTime
     )
 
-    const Staking = await ethers.getContractFactory('OtterStaking')
+    const Staking = await ethers.getContractFactory('DoveStaking')
     staking = await Staking.deploy(
       clam.address,
       sClam.address,
@@ -93,10 +93,10 @@ describe.skip('IDO', () => {
     )
 
     // Deploy staking helper
-    const StakingHelper = await ethers.getContractFactory('OtterStakingHelper')
+    const StakingHelper = await ethers.getContractFactory('DoveStakingHelper')
     stakingHelper = await StakingHelper.deploy(staking.address, clam.address)
 
-    const StakingWarmup = await ethers.getContractFactory('OtterStakingWarmup')
+    const StakingWarmup = await ethers.getContractFactory('DoveStakingWarmup')
     const stakingWarmup = await StakingWarmup.deploy(
       staking.address,
       sClam.address
@@ -116,7 +116,7 @@ describe.skip('IDO', () => {
     await treasury.queue('8', stakingDistributor.address)
     await treasury.toggle('8', stakingDistributor.address, zeroAddress)
 
-    const IDO = await ethers.getContractFactory('OtterClamIDO')
+    const IDO = await ethers.getContractFactory('DoveClamIDO')
     ido = await IDO.deploy(
       clam.address,
       dai.address,

@@ -1,4 +1,4 @@
-// @dev. This script will deploy this V1.1 of Otter. It will deploy the whole ecosystem.
+// @dev. This script will deploy this V1.1 of Dove. It will deploy the whole ecosystem.
 
 const { ethers } = require('hardhat')
 const { BigNumber, ContractFactory } = ethers
@@ -85,7 +85,7 @@ async function main() {
   console.log('DAI addr: ' + dai.address)
 
   // Deploy CLAM
-  const CLAM = await ethers.getContractFactory('OtterClamERC20')
+  const CLAM = await ethers.getContractFactory('DoveClamERC20')
   const clam = await CLAM.deploy()
   console.log('CLAM deployed: ' + clam.address)
 
@@ -109,12 +109,12 @@ async function main() {
 
   // Deploy bonding calc
   const BondingCalculator = await ethers.getContractFactory(
-    'OtterBondingCalculator'
+    'DoveBondingCalculator'
   )
   const bondingCalculator = await BondingCalculator.deploy(clam.address)
 
   // Deploy treasury
-  const Treasury = await ethers.getContractFactory('OtterTreasury')
+  const Treasury = await ethers.getContractFactory('DoveTreasury')
   const treasury = await Treasury.deploy(
     clam.address,
     dai.address,
@@ -126,7 +126,7 @@ async function main() {
 
   // Deploy staking distributor
   const StakingDistributor = await ethers.getContractFactory(
-    'OtterStakingDistributor'
+    'DoveStakingDistributor'
   )
   const stakingDistributor = await StakingDistributor.deploy(
     treasury.address,
@@ -136,11 +136,11 @@ async function main() {
   )
 
   // Deploy sCLAM
-  const StakedCLAM = await ethers.getContractFactory('StakedOtterClamERC20')
+  const StakedCLAM = await ethers.getContractFactory('StakedDoveClamERC20')
   const sCLAM = await StakedCLAM.deploy()
 
   // Deploy Staking
-  const Staking = await ethers.getContractFactory('OtterStaking')
+  const Staking = await ethers.getContractFactory('DoveStaking')
   const staking = await Staking.deploy(
     clam.address,
     sCLAM.address,
@@ -150,21 +150,21 @@ async function main() {
   )
 
   // Deploy staking warmpup
-  const StakingWarmup = await ethers.getContractFactory('OtterStakingWarmup')
+  const StakingWarmup = await ethers.getContractFactory('DoveStakingWarmup')
   const stakingWarmup = await StakingWarmup.deploy(
     staking.address,
     sCLAM.address
   )
 
   // Deploy staking helper
-  const StakingHelper = await ethers.getContractFactory('OtterStakingHelper')
+  const StakingHelper = await ethers.getContractFactory('DoveStakingHelper')
   const stakingHelper = await StakingHelper.deploy(
     staking.address,
     clam.address
   )
 
   // Deploy DAI bond
-  const DAIBond = await ethers.getContractFactory('OtterBondDepository')
+  const DAIBond = await ethers.getContractFactory('DoveBondDepository')
   const daiBond = await DAIBond.deploy(
     clam.address,
     dai.address,
@@ -173,7 +173,7 @@ async function main() {
     zeroAddress
   )
 
-  const DaiClamBond = await ethers.getContractFactory('OtterBondDepository')
+  const DaiClamBond = await ethers.getContractFactory('DoveBondDepository')
   const daiClamBond = await DaiClamBond.deploy(
     clam.address,
     lpAddress,
@@ -181,7 +181,7 @@ async function main() {
     daoAddr,
     bondingCalculator.address
   )
-  const IDO = await ethers.getContractFactory('OtterClamIDO')
+  const IDO = await ethers.getContractFactory('DoveClamIDO')
   const ido = await IDO.deploy(
     clam.address,
     daiAddr,
@@ -269,10 +269,10 @@ async function main() {
   await (await treasury.queue('8', stakingDistributor.address)).wait(1)
   await treasury.toggle('8', stakingDistributor.address, zeroAddress)
 
-  // const Treasury = await ethers.getContractFactory('OtterTreasury')
+  // const Treasury = await ethers.getContractFactory('DoveTreasury')
   // const treasury = Treasury.attach('0x12239Ec193A208343F7FEa8410b7a10cb7DFf9A6')
 
-  // const IDO = await ethers.getContractFactory('OtterClamIDO')
+  // const IDO = await ethers.getContractFactory('DoveClamIDO')
   // const ido = await IDO.deploy(
   //   '0xcf2cf9Aee9A2b93a7AF9F2444843AFfDd8C435eb',
   //   '0x19907af68A173080c3e05bb53932B0ED541f6d20',
@@ -301,7 +301,7 @@ async function main() {
   // await (await treasury.queue('4', ido.address)).wait(1)
   // await treasury.toggle('4', ido.address, zeroAddress)
 
-  // const IDO = await ethers.getContractFactory('OtterClamIDO')
+  // const IDO = await ethers.getContractFactory('DoveClamIDO')
   // const ido = IDO.attach('0xC4d9801372e6800D5dBb03eC907CbdDE437bE627')
   // await (await ido.disableWhiteList()).wait()
   // const wallets = []

@@ -1,7 +1,7 @@
 {
-  "name": "otterclam-contracts",
+  "name": "Doveclam-contracts",
   "version": "1.0.0",
-  "description": "Smart Contracts for OtterClam",
+  "description": "Smart Contracts for DoveClam",
   "directories": {
     "test": "test"
   },
@@ -9,7 +9,7 @@
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
     "clean": "npx hardhat clean",
-    "start": "npx hardhat run scripts/deployAll.js",
+    "start": "npx hardhat run scripts/deployIDO.js",
     "lint:sol": "solhint -f table contracts/**/*.sol",
     "bonds:monitor": "npx hardhat run ./scripts/monitorBonds.js --network polygon-mainnet",
     "bonds:adjust": "npx hardhat run ./scripts/adjustBonds.js --network polygon-mainnet"
@@ -36,11 +36,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OtterClam/otter-contracts.git"
+    "url": "git+https://github.com/DoveClam/Dove-contracts.git"
   },
   "author": "",
   "bugs": {
-    "url": "https://github.com/OtterClam/otter-contracts/issues"
+    "url": "https://github.com/DoveClam/Dove-contracts/issues"
   },
-  "homepage": "https://github.com/OtterClam/otter-contracts#readme"
+  "homepage": "https://github.com/DoveClam/Dove-contracts#readme"
 }

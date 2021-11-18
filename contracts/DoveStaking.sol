@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity 0.7.5;
 
-import './interfaces/IOtterStaking.sol';
+import './interfaces/IDoveStaking.sol';
 
 import "./libraries/SafeMath.sol";
 import "./libraries/ERC20.sol";
@@ -30,7 +30,7 @@ interface IDistributor {
     function distribute() external returns ( bool );
 }
 
-contract OtterStaking is Ownable, IOtterStaking {
+contract DoveStaking is Ownable, IDoveStaking {
 
     using SafeMath for uint256;
     using SafeERC20 for IERC20;

@@ -26,11 +26,11 @@ contract VaultOwned is Ownable {
 
 }
 
-contract OtterClamERC20V2 is ERC20Permit, VaultOwned {
+contract DoveClamERC20V2 is ERC20Permit, VaultOwned {
 
     using SafeMath for uint256;
 
-    constructor() ERC20("Otter Clam", "CLAM2", 9) {
+    constructor() ERC20("Dove Clam", "CLAM2", 9) {
     }
 
     function completeMigration() external onlyOwner() {

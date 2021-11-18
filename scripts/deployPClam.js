@@ -66,9 +66,9 @@ async function main() {
   //   await clamCirculatingSupply.setNonCirculatingCLAMAddresses([daoAddr])
   // ).wait()
 
-  const PreOtterClamERC20 = await ethers.getContractFactory('PreOtterClamERC20')
-  // const pClam = await PreOtterClamERC20.deploy()
-  const pClam = PreOtterClamERC20.attach(
+  const PreDoveClamERC20 = await ethers.getContractFactory('PreDoveClamERC20')
+  // const pClam = await PreDoveClamERC20.deploy()
+  const pClam = PreDoveClamERC20.attach(
     '0xBee8DDFC4698478dD774c724275785b4B5156092'
   )
   // await pClam.deployTransaction.wait()
@@ -91,7 +91,7 @@ async function main() {
   await exercisePreClam.deployTransaction.wait()
   console.log('exercisePreClam deployed at: ' + exercisePreClam.address)
 
-  const Treasury = await ethers.getContractFactory('OtterTreasury')
+  const Treasury = await ethers.getContractFactory('DoveTreasury')
   const treasury = Treasury.attach(addresses.TREASURY_ADDRESS)
   await (await treasury.queue('0', exercisePreClam.address)).wait()
   // TODO: toggle after 43200 blocks

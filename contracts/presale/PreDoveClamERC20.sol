@@ -10,7 +10,7 @@ abstract contract Divine is ERC20, Ownable {
     constructor ( string memory name_, string memory symbol_, uint8 decimals_ ) ERC20( name_, symbol_, decimals_ ) {}
 }
 
-contract PreOtterClamERC20 is Divine {
+contract PreDoveClamERC20 is Divine {
 
   using SafeMath for uint256;
 

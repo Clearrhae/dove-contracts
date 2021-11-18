@@ -2,13 +2,13 @@
 
 pragma solidity 0.7.5;
 
-import "./interfaces/IOtterTreasury.sol";
+import "./interfaces/IDoveTreasury.sol";
 
 import "./libraries/ERC20.sol";
 import "./libraries/Ownable.sol";
 
 
-contract OtterStakingDistributor is Ownable {
+contract DoveStakingDistributor is Ownable {
 
     using SafeMath for uint;
     using SafeERC20 for IERC20;
@@ -65,7 +65,7 @@ contract OtterStakingDistributor is Ownable {
             // distribute rewards to each recipient
             for ( uint i = 0; i < info.length; i++ ) {
                 if ( info[ i ].rate > 0 ) {
-                    IOtterTreasury( treasury ).mintRewards( // mint and send from treasury
+                    IDoveTreasury( treasury ).mintRewards( // mint and send from treasury
                         info[ i ].recipient,
                         nextRewardAt( info[ i ].rate )
                     );

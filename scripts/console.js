@@ -33,29 +33,29 @@ const lp = new ethers.Contract(
   IUniswapV2Pair,
   deployer
 )
-const CLAM = await ethers.getContractFactory('OtterClamERC20')
+const CLAM = await ethers.getContractFactory('DoveClamERC20')
 const clam = await CLAM.attach(addresses.CLAM_ADDRESS)
 
 const DAI = await ethers.getContractFactory('DAI')
 const dai = DAI.attach(addresses.DAI_ADDRESS)
 
-const Treasury = await ethers.getContractFactory('OtterTreasury')
+const Treasury = await ethers.getContractFactory('DoveTreasury')
 const treasury = Treasury.attach(addresses.TREASURY_ADDRESS)
 
-const Staking = await ethers.getContractFactory('OtterStaking')
+const Staking = await ethers.getContractFactory('DoveStaking')
 const staking = Staking.attach(addresses.STAKING_ADDRESS)
 
 const StakingDistributor = await ethers.getContractFactory(
-  'OtterStakingDistributor'
+  'DoveStakingDistributor'
 )
 const stakingDistributor = StakingDistributor.attach(
   await staking.distributor()
 )
 
-const DAIBond = await ethers.getContractFactory('OtterBondDepository')
+const DAIBond = await ethers.getContractFactory('DoveBondDepository')
 const daiBond = DAIBond.attach(addresses.BONDS.DAI)
 
-const LPBond = await ethers.getContractFactory('OtterBondDepository')
+const LPBond = await ethers.getContractFactory('DoveBondDepository')
 const lpBond = LPBond.attach(addresses.BONDS.DAI_CLAM)
 
 const Migrator = await ethers.getContractFactory('ClamTokenMigrator')

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity 0.7.5;
 
-import "./interfaces/IOtterTreasury.sol";
-import "./interfaces/IOtterStaking.sol";
+import "./interfaces/IDoveTreasury.sol";
+import "./interfaces/IDoveStaking.sol";
 
 import "./libraries/Ownable.sol";
 import "./libraries/SafeMath.sol";
@@ -19,7 +19,7 @@ interface IStakingHelper {
     function stake( uint _amount, address _recipient ) external;
 }
 
-contract OtterBondDepository is Ownable {
+contract DoveBondDepository is Ownable {
 
     using FixedPoint for *;
     using SafeERC20 for IERC20;
@@ -228,7 +228,7 @@ contract OtterBondDepository is Ownable {
 
         require( _maxPrice >= nativePrice, "Slippage limit: more than max price" ); // slippage protection
 
-        uint value = IOtterTreasury( treasury ).valueOfToken( principle, _amount );
+        uint value = IDoveTreasury( treasury ).valueOfToken( principle, _amount );
         uint payout = payoutFor( value ); // payout to bonder is computed
 
         require( payout >= 10000000, "Bond too small" ); // must be > 0.01 CLAM ( underflow protection )
@@ -245,7 +245,7 @@ contract OtterBondDepository is Ownable {
          */
         IERC20( principle ).safeTransferFrom( msg.sender, address(this), _amount );
         IERC20( principle ).approve( address( treasury ), _amount );
-        IOtterTreasury( treasury ).deposit( _amount, principle, profit );
+        IDoveTreasury( treasury ).deposit( _amount, principle, profit );
 
         if ( fee != 0 ) { // fee is transferred to dao
             IERC20( CLAM ).safeTransfer( DAO, fee );
@@ -322,7 +322,7 @@ contract OtterBondDepository is Ownable {
                 IStakingHelper( stakingHelper ).stake( _amount, _recipient );
             } else {
                 IERC20( CLAM ).approve( staking, _amount );
-                IOtterStaking( staking ).stake( _amount, _recipient );
+                IDoveStaking( staking ).stake( _amount, _recipient );
             }
         }
         return _amount;

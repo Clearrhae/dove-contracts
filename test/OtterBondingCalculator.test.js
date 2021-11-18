@@ -2,7 +2,7 @@ const { ethers } = require('hardhat')
 const { expect } = require('chai')
 const { BigNumber } = require('@ethersproject/bignumber')
 
-describe('OtterBondingCalculator', () => {
+describe('DoveBondingCalculator', () => {
   let // Used as default deployer for contracts, asks as owner of contracts.
     deployer,
     // Used as the default user for deposits and trade. Intended to be the default regular user.
@@ -22,7 +22,7 @@ describe('OtterBondingCalculator', () => {
   beforeEach(async () => {
     ;[deployer, depositor] = await ethers.getSigners()
 
-    CLAM = await ethers.getContractFactory('OtterClamERC20')
+    CLAM = await ethers.getContractFactory('DoveClamERC20')
     clam = await CLAM.connect(deployer).deploy()
     await clam.setVault(deployer.address)
 
@@ -42,7 +42,7 @@ describe('OtterBondingCalculator', () => {
     lp = await UniswapV2Pair.attach(pairAddress)
 
     BondingCalcContract = await ethers.getContractFactory(
-      'OtterBondingCalculator'
+      'DoveBondingCalculator'
     )
     bondingCalc = await BondingCalcContract.connect(deployer).deploy(
       clam.address

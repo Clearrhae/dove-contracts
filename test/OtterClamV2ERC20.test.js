@@ -1,11 +1,11 @@
 const { ethers } = require('hardhat')
 const { expect } = require('chai')
 
-describe('OtterClamERC20V2', () => {
+describe('DoveClamERC20V2', () => {
   let clam2;
 
   beforeEach(async () => {
-    const CLAM2 = await ethers.getContractFactory('OtterClamERC20V2')
+    const CLAM2 = await ethers.getContractFactory('DoveClamERC20V2')
     clam2 = await CLAM2.deploy()
   })
 

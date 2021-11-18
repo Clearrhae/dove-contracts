@@ -1,4 +1,4 @@
-// @dev. This script will deploy this V1.1 of Otter. It will deploy the whole ecosystem.
+// @dev. This script will deploy this V1.1 of Dove. It will deploy the whole ecosystem.
 
 const { ethers } = require('hardhat')
 const UniswapV2ABI = require('./IUniswapV2Factory.json').abi
@@ -59,7 +59,7 @@ async function main() {
   const maiAddr = '0xa3Fa99A148fA48D14Ed51d610c367C61876997F1'
 
   // Deploy CLAM
-  const CLAM = await ethers.getContractFactory('OtterClamERC20')
+  const CLAM = await ethers.getContractFactory('DoveClamERC20')
   const clam = CLAM.attach('0x4d6A30EFBE2e9D7A9C143Fce1C5Bb30d9312A465')
   // const clam = await CLAM.deploy()
   // console.log('CLAM deployed: ' + clam.address)
@@ -75,7 +75,7 @@ async function main() {
 
   // Deploy bonding calc
   const BondingCalculator = await ethers.getContractFactory(
-    'OtterBondingCalculator'
+    'DoveBondingCalculator'
   )
   // const bondingCalculator = await BondingCalculator.deploy(clam.address)
   const bondingCalculator = BondingCalculator.attach(
@@ -83,7 +83,7 @@ async function main() {
   )
 
   // Deploy treasury
-  const Treasury = await ethers.getContractFactory('OtterTreasury')
+  const Treasury = await ethers.getContractFactory('DoveTreasury')
   const treasury = await Treasury.attach(
     '0xab328Ca61599974b0f577d1F8AB0129f2842d765'
   )
@@ -98,7 +98,7 @@ async function main() {
 
   // Deploy staking distributor
   const StakingDistributor = await ethers.getContractFactory(
-    'OtterStakingDistributor'
+    'DoveStakingDistributor'
   )
   const stakingDistributor = StakingDistributor.attach(
     '0xD42938418E648b981bA2814b0C8b4F6f35CE61B8'
@@ -112,13 +112,13 @@ async function main() {
   // await stakingDistributor.deployTransaction.wait()
 
   // Deploy sCLAM
-  const StakedCLAM = await ethers.getContractFactory('StakedOtterClamERC20')
+  const StakedCLAM = await ethers.getContractFactory('StakedDoveClamERC20')
   const sCLAM = StakedCLAM.attach('0x3949F058238563803b5971711Ad19551930C8209')
   // const sCLAM = await StakedCLAM.deploy()
   // await sCLAM.deployTransaction.wait()
 
   // Deploy Staking
-  const Staking = await ethers.getContractFactory('OtterStaking')
+  const Staking = await ethers.getContractFactory('DoveStaking')
   const staking = await Staking.attach(
     '0xcF2A11937A906e09EbCb8B638309Ae8612850dBf'
   )
@@ -132,7 +132,7 @@ async function main() {
   // await staking.deployTransaction.wait()
 
   // Deploy staking warmpup
-  const StakingWarmup = await ethers.getContractFactory('OtterStakingWarmup')
+  const StakingWarmup = await ethers.getContractFactory('DoveStakingWarmup')
   const stakingWarmup = StakingWarmup.attach(
     '0x314de54E2B64E36F4B0c75079C7FB7f894750014'
   )
@@ -143,7 +143,7 @@ async function main() {
   // await stakingWarmup.deployTransaction.wait()
 
   // Deploy staking helper
-  const StakingHelper = await ethers.getContractFactory('OtterStakingHelper')
+  const StakingHelper = await ethers.getContractFactory('DoveStakingHelper')
   const stakingHelper = StakingHelper.attach(
     '0x22F587EcF472670c61aa4715d0b76D2fa40A9798'
   )
@@ -154,7 +154,7 @@ async function main() {
   // await stakingHelper.deployTransaction.wait()
 
   // Deploy MAI bond
-  const MAIBond = await ethers.getContractFactory('OtterBondDepository')
+  const MAIBond = await ethers.getContractFactory('DoveBondDepository')
   const maiBond = MAIBond.attach('0x28077992bFA9609Ae27458A766470b03D43dEe8A')
   // const maiBond = await MAIBond.deploy(
   //   clam.address,
@@ -165,7 +165,7 @@ async function main() {
   // )
   // await maiBond.deployTransaction.wait()
 
-  const MaiClamBond = await ethers.getContractFactory('OtterBondDepository')
+  const MaiClamBond = await ethers.getContractFactory('DoveBondDepository')
   // const maiClamBond = MaiClamBond.attach(
   //   '0x79B47c03B02019Af78Ee0de9B0b3Ac0786338a0d'
   // )

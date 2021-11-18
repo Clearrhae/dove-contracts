@@ -15,7 +15,7 @@ interface IBondingCalculator {
   function valuation( address pair_, uint amount_ ) external view returns ( uint _value );
 }
 
-contract OtterBondingCalculator is IBondingCalculator {
+contract DoveBondingCalculator is IBondingCalculator {
 
     using FixedPoint for *;
     using SafeMath for uint;

@@ -8,8 +8,8 @@ const priceFormatter = Intl.NumberFormat('en', {
 })
 
 async function main() {
-  const OtterBondDepository = await ethers.getContractFactory(
-    'OtterBondDepository'
+  const DoveBondDepository = await ethers.getContractFactory(
+    'DoveBondDepository'
   )
   const bonds = [
     { name: 'MAI', address: '0x28077992bFA9609Ae27458A766470b03D43dEe8A' },
@@ -17,7 +17,7 @@ async function main() {
   ]
 
   for (const { name, address } of bonds) {
-    const bond = OtterBondDepository.attach(address)
+    const bond = DoveBondDepository.attach(address)
     await fetchBondInfo(name, bond)
     bond.on('BondCreated', async (deposit, payout, _, priceInUSD) => {
       console.log(`==== New Bond ${name} created! ==== ` + new Date())
@@ -43,7 +43,7 @@ async function main() {
   setInterval(async () => {
     console.log('==== ' + new Date())
     for (const { name, address } of bonds) {
-      const bond = OtterBondDepository.attach(address)
+      const bond = DoveBondDepository.attach(address)
       await fetchBondInfo(name, bond)
     }
   }, 60 * 1000)

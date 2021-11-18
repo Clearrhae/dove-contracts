@@ -26,7 +26,7 @@ interface IStaking {
     function stake(uint256 _amount, address _recipient) external returns (bool);
 }
 
-contract OtterClamIDO is Ownable {
+contract DoveClamIDO is Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 

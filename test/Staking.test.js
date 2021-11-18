@@ -39,17 +39,17 @@ describe('Staking', () => {
 
     firstEpochTime = (await deployer.provider.getBlock()).timestamp - 100
 
-    const CLAM = await ethers.getContractFactory('OtterClamERC20')
+    const CLAM = await ethers.getContractFactory('DoveClamERC20')
     clam = await CLAM.deploy()
     await clam.setVault(deployer.address)
 
     const DAI = await ethers.getContractFactory('DAI')
     dai = await DAI.deploy(0)
 
-    const StakedCLAM = await ethers.getContractFactory('StakedOtterClamERC20')
+    const StakedCLAM = await ethers.getContractFactory('StakedDoveClamERC20')
     sClam = await StakedCLAM.deploy()
 
-    const Treasury = await ethers.getContractFactory('OtterTreasury')
+    const Treasury = await ethers.getContractFactory('DoveTreasury')
     treasury = await Treasury.deploy(
       clam.address,
       dai.address,
@@ -59,7 +59,7 @@ describe('Staking', () => {
     )
 
     const StakingDistributor = await ethers.getContractFactory(
-      'OtterStakingDistributor'
+      'DoveStakingDistributor'
     )
     stakingDistributor = await StakingDistributor.deploy(
       treasury.address,
@@ -68,7 +68,7 @@ describe('Staking', () => {
       firstEpochTime
     )
 
-    const Staking = await ethers.getContractFactory('OtterStaking')
+    const Staking = await ethers.getContractFactory('DoveStaking')
     staking = await Staking.deploy(
       clam.address,
       sClam.address,
@@ -78,10 +78,10 @@ describe('Staking', () => {
     )
 
     // Deploy staking helper
-    const StakingHelper = await ethers.getContractFactory('OtterStakingHelper')
+    const StakingHelper = await ethers.getContractFactory('DoveStakingHelper')
     stakingHelper = await StakingHelper.deploy(staking.address, clam.address)
 
-    const StakingWarmup = await ethers.getContractFactory('OtterStakingWarmup')
+    const StakingWarmup = await ethers.getContractFactory('DoveStakingWarmup')
     const stakingWarmup = await StakingWarmup.deploy(
       staking.address,
       sClam.address

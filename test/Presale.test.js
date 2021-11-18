@@ -24,19 +24,19 @@ describe('Presale', () => {
 
     firstEpochTime = (await deployer.provider.getBlock()).timestamp - 100
 
-    const CLAM = await ethers.getContractFactory('OtterClamERC20')
+    const CLAM = await ethers.getContractFactory('DoveClamERC20')
     clam = await CLAM.deploy()
     await clam.setVault(deployer.address)
 
     const DAI = await ethers.getContractFactory('DAI')
     dai = await DAI.deploy(0)
 
-    const PreOtterClamERC20 = await ethers.getContractFactory(
-      'PreOtterClamERC20'
+    const PreDoveClamERC20 = await ethers.getContractFactory(
+      'PreDoveClamERC20'
     )
-    pClam = await PreOtterClamERC20.deploy()
+    pClam = await PreDoveClamERC20.deploy()
 
-    const Treasury = await ethers.getContractFactory('OtterTreasury')
+    const Treasury = await ethers.getContractFactory('DoveTreasury')
     treasury = await Treasury.deploy(
       clam.address,
       dai.address,

@@ -4,7 +4,7 @@ pragma solidity 0.7.5;
 import 'hardhat/console.sol';
 
 import '../interfaces/IERC20.sol';
-import '../interfaces/IOtterTreasury.sol';
+import '../interfaces/IDoveTreasury.sol';
 
 import '../libraries/Ownable.sol';
 import '../libraries/SafeMath.sol';
@@ -55,8 +55,8 @@ contract ClamTokenMigrator is Ownable {
     IERC20 public immutable oldCLAM;
     IERC20 public immutable newCLAM;
     IERC20 public immutable mai;
-    IOtterTreasury public immutable oldTreasury;
-    IOtterTreasury public immutable newTreasury;
+    IDoveTreasury public immutable oldTreasury;
+    IDoveTreasury public immutable newTreasury;
     IUniswapV2Router public immutable quickRouter;
     IUniswapV2Factory public immutable quickFactory;
 
@@ -76,7 +76,7 @@ contract ClamTokenMigrator is Ownable {
         require(_oldCLAM != address(0));
         oldCLAM = IERC20(_oldCLAM);
         require(_oldTreasury != address(0));
-        oldTreasury = IOtterTreasury(_oldTreasury);
+        oldTreasury = IDoveTreasury(_oldTreasury);
         require(_quickRouter != address(0));
         quickRouter = IUniswapV2Router(_quickRouter);
         require(_quickFactory != address(0));
@@ -84,7 +84,7 @@ contract ClamTokenMigrator is Ownable {
         require(_newCLAM != address(0));
         newCLAM = IERC20(_newCLAM);
         require(_newTreasury != address(0));
-        newTreasury = IOtterTreasury(_newTreasury);
+        newTreasury = IDoveTreasury(_newTreasury);
         require(_mai != address(0));
         mai = IERC20(_mai);
     }

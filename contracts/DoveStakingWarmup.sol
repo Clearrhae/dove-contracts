@@ -5,7 +5,7 @@ pragma solidity 0.7.5;
 import "./interfaces/IERC20.sol";
 
 
-contract OtterStakingWarmup {
+contract DoveStakingWarmup {
 
     address public immutable staking;
     address public immutable sCLAM;

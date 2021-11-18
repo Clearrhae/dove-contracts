@@ -5,7 +5,7 @@ import "./libraries/ERC20.sol";
 import "./libraries/Ownable.sol";
 
 
-contract StakedOtterClamERC20 is ERC20Permit, Ownable {
+contract StakedDoveClamERC20 is ERC20Permit, Ownable {
 
     using SafeMath for uint256;
 

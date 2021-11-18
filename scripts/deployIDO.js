@@ -12,20 +12,20 @@ async function main() {
   const [deployer] = await ethers.getSigners()
   console.log('Deploying contracts with the account: ' + deployer.address)
 
-  const IDO = await ethers.getContractFactory('OtterClamIDO')
-  // const ido = await IDO.deploy(
-  //   '0x4d6A30EFBE2e9D7A9C143Fce1C5Bb30d9312A465', // CLAM
-  //   '0xa3Fa99A148fA48D14Ed51d610c367C61876997F1', // MAI
-  //   '0xab328Ca61599974b0f577d1F8AB0129f2842d765', // Treasury
-  //   '0xcF2A11937A906e09EbCb8B638309Ae8612850dBf', // Staking
-  //   '0x8094f4C9a4C8AD1FF4c6688d07Bd90f996C7CA21' // CLAM-MAI LP
-  // )
-  // console.log('Deploy tx: ' + ido.deployTransaction.hash)
-  // console.log('Deploy nonce: ' + ido.deployTransaction.nonce)
-  // await ido.deployTransaction.wait()
-  // console.log('IDO deployed at: ' + ido.address)
+  const IDO = await ethers.getContractFactory('DoveClamIDO')
+  const ido = await IDO.deploy(
+    '0x4d6A30EFBE2e9D7A9C143Fce1C5Bb30d9312A465', // CLAM
+    '0xa3Fa99A148fA48D14Ed51d610c367C61876997F1', // MAI
+    '0xab328Ca61599974b0f577d1F8AB0129f2842d765', // Treasury
+    '0xcF2A11937A906e09EbCb8B638309Ae8612850dBf', // Staking
+    '0x8094f4C9a4C8AD1FF4c6688d07Bd90f996C7CA21' // CLAM-MAI LP
+  )
+  console.log('Deploy tx: ' + ido.deployTransaction.hash)
+  console.log('Deploy nonce: ' + ido.deployTransaction.nonce)
+  await ido.deployTransaction.wait()
+  console.log('IDO deployed at: ' + ido.address)
 
-  const ido = IDO.attach('0x7f637Ea843405Dff10592f894292A8f1188166F9')
+  // const ido = IDO.attach('0x7f637Ea843405Dff10592f894292A8f1188166F9')
   // await ido.initialize(
   //   BigNumber.from(200000).mul(BigNumber.from(10).pow(9)),
   //   BigNumber.from(5).mul(BigNumber.from(10).pow(18)),
@@ -33,7 +33,7 @@ async function main() {
   //   1635724800 // 2021-11-1 0:00 UTC
   // )
 
-  const Treasury = await ethers.getContractFactory('OtterTreasury')
+  const Treasury = await ethers.getContractFactory('DoveTreasury')
   const treasury = Treasury.attach('0xab328Ca61599974b0f577d1F8AB0129f2842d765')
 
   // let whitelist = fs
