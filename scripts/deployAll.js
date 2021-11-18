@@ -7,190 +7,133 @@ const { ethers } = require("hardhat");
 
 async function main() {
 
-    const [deployer, MockDAO] = await ethers.getSigners();
-    console.log('Deploying contracts with the account: ' + deployer.address);
+    // Get the signer
+    const [deployer] = await ethers.getSigners();
+    console.log("DOVE Testnet Deployment with Address: " + deployer.address);
 
-    // Initial staking index
-    const initialIndex = '7675210820';
-
-    // First block epoch occurs
-    const firstEpochBlock = '8961000';
-
-    // What epoch will be first epoch
-    const firstEpochNumber = '338';
-
-    // How many blocks are in each epoch
-    const epochLengthInBlocks = '2200';
-
-    // Initial reward rate for epoch
-    const initialRewardRate = '3000';
-
-    // Ethereum 0 address, used when toggling changes in treasury
-    const zeroAddress = '0x0000000000000000000000000000000000000000';
-
-    // Large number for approval for Frax and DAI
+    // Define variables
+    const initialIndex = 1000000000; // 1.0
+    const firstEpochTimestamp = (await deployer.getBlock()).timestamp + 30 * 60; // 30 minutes from now
+    const epochDuration = 28800; // 8 hours
+    const initalRewardRate = '5000';
+    const deadAddress = '0x0000000000000000000000000000000000000000';
     const largeApproval = '100000000000000000000000000000000';
+    const usdcBondBCV = '369'; 
+    const usdcAddress = ''; //ADD USDC ADDRESS HERE
+    const bondVestingLength = 5 * 24 * 3600; // 5 days
+    const minBondPrice = '0'; //TBC: Launch Price
+    const maxBondPayout = '1000';
+    const bondFee = '10000'
+    const maxBondDebt = '1000000000000000'
+    const initialBondDebt = '0'
+    const warmupPeriod = '3'
 
-    // Initial mint for Frax and DAI (10,000,000)
-    const initialMint = '10000000000000000000000000';
-
-    // DAI bond BCV
-    const daiBondBCV = '369';
-
-    // Frax bond BCV
-    const fraxBondBCV = '690';
-
-    // Bond vesting length in blocks. 33110 ~ 5 days
-    const bondVestingLength = '33110';
-
-    // Min bond price
-    const minBondPrice = '50000';
-
-    // Max bond payout
-    const maxBondPayout = '50'
-
-    // DAO fee for bond
-    const bondFee = '10000';
-
-    // Max debt bond can take on
-    const maxBondDebt = '1000000000000000';
-
-    // Initial Bond debt
-    const intialBondDebt = '0'
-
-    // Deploy DOVE
-    const DOVE = await ethers.getContractFactory('DoveERC20Token');
+    // Deploy the Dove contract
+    const DOVE = await ethers.getContractFactory("DoveERC20Token");
     const dove = await DOVE.deploy();
+    console.log("Dove deployed at: " + dove.address);
 
-    // Deploy DAI
-    const DAI = await ethers.getContractFactory('DAI');
-    const dai = await DAI.deploy( 0 );
+    // Deploy the sDOVE contract
+    const sDOVE = await ethers.getContractFactory("sDove");
+    const sdove = await sDOVE.deploy();
+    console.log("sDove deployed at: " + sDOVE.address);
 
-    // Deploy Frax
-    const Frax = await ethers.getContractFactory('FRAX');
-    const frax = await Frax.deploy( 0 );
+    // Deploy the Treasury contract
+    const Treasury = await ethers.getContractFactory("DoveTreasury");
+    const treasury = await Treasury.deploy(dove.address, usdcAddress, 0);
+    console.log("Treasury deployed at: " + treasury.address);
 
-    // Deploy 10,000,000 mock DAI and mock Frax
-    await dai.mint( deployer.address, initialMint );
-    await frax.mint( deployer.address, initialMint );
+    // Deploy the BondingCalculator contract
+    const BondingCalculator = await ethers.getContractFactory("DoveBondingCalculator");
+    const bondingCalculator = await BondingCalculator.deploy(dove.address);
+    console.log("BondingCalculator deployed at: " + bondingCalculator.address);
 
-    // Deploy treasury
-    //@dev changed function in treaury from 'valueOf' to 'valueOfToken'... solidity function was coflicting w js object property name
-    const Treasury = await ethers.getContractFactory('MockDoveTreasury'); 
-    const treasury = await Treasury.deploy( dove.address, dai.address, frax.address, 0 );
+    // Deploy the staking distributor contract
+    const StakingDistributor = await ethers.getContractFactory("Distributor");
+    const stakingDistributor = await StakingDistributor.deploy(treasury.address, dove.address, epochDuration, firstEpochTimestamp);
+    console.log("StakingDistributor deployed at: " + stakingDistributor.address);
 
-    // Deploy bonding calc
-    const DoveBondingCalculator = await ethers.getContractFactory('DoveBondingCalculator');
-    const doveBondingCalculator = await DoveBondingCalculator.deploy( dove.address );
+    // Deploy the staking contract
+    const Staking = await ethers.getContractFactory("DoveStaking");
+    const staking = await Staking.deploy(dove.address, sdove.address, epochDuration, 1, firstEpochTimestamp);
+    console.log("Staking deployed at: " + staking.address);
 
-    // Deploy staking distributor
-    const Distributor = await ethers.getContractFactory('Distributor');
-    const distributor = await Distributor.deploy(treasury.address, dove.address, epochLengthInBlocks, firstEpochBlock);
+    // Deploy staking warmup contract
+    const StakingWarmup = await ethers.getContractFactory('StakingWarmup');
+    const stakingWarmup = await StakingWarmup.deploy(staking.address, sdove.address);
+    console.log("StakingWarmup deployed at: " + stakingWarmup.address);
 
-    // Deploy sDOVE
-    const SDOVE = await ethers.getContractFactory('sDove');
-    const sDOVE = await SDOVE.deploy();
-
-    // Deploy Staking
-    const Staking = await ethers.getContractFactory('DoveStaking');
-    const staking = await Staking.deploy( dove.address, sDOVE.address, epochLengthInBlocks, firstEpochNumber, firstEpochBlock );
-
-    // Deploy staking warmpup
-    const StakingWarmpup = await ethers.getContractFactory('StakingWarmup');
-    const stakingWarmup = await StakingWarmpup.deploy(staking.address, sDOVE.address);
-
-    // Deploy staking helper
+    // Deploy staking helper contract
     const StakingHelper = await ethers.getContractFactory('StakingHelper');
     const stakingHelper = await StakingHelper.deploy(staking.address, dove.address);
+    console.log("StakingHelper deployed at: " + stakingHelper.address);
 
-    // Deploy DAI bond
-    //@dev changed function call to Treasury of 'valueOf' to 'valueOfToken' in BondDepository due to change in Treausry contract
-    const DAIBond = await ethers.getContractFactory('MockDoveBondDepository');
-    const daiBond = await DAIBond.deploy(dove.address, dai.address, treasury.address, MockDAO.address, zeroAddress);
+    // Deploy the Bonding contract
+    const Bonding = await ethers.getContractFactory("DoveBondDepository");
+    const usdcBond = await Bonding.deploy(dove.address, usdcAddress, treasury.address, deployer.address, deadAddress);
+    console.log("USDC Bonding deployed at: " + usdcBond.address);
 
-    // Deploy Frax bond
-    //@dev changed function call to Treasury of 'valueOf' to 'valueOfToken' in BondDepository due to change in Treausry contract
-    const FraxBond = await ethers.getContractFactory('MockDoveBondDepository');
-    const fraxBond = await FraxBond.deploy(dove.address, frax.address, treasury.address, MockDAO.address, zeroAddress);
+    console.log(
+        JSON.stringify({
+          DOVE: dove.address,
+          sDOVE: sdove.address,
+          Treasury: treasury.address,
+          BondingCalculator: bondingCalculator.address,
+          StakingDistributor: stakingDistributor.address,
+          Staking: staking.address,
+          StakingWarmpup: stakingWarmup.address,
+          StakingHelper: stakingHelper.address,
+          RESERVES: {
+            USDC: usdcAddress,
+          },
+          BONDS: {
+            USDC: usdcBond.address,
+          },
+        })
+      )
 
-    // queue and toggle DAI and Frax bond reserve depositor
-    await treasury.queue('0', daiBond.address);
-    await treasury.queue('0', fraxBond.address);
-    await treasury.toggle('0', daiBond.address, zeroAddress);
-    await treasury.toggle('0', fraxBond.address, zeroAddress);
+      
+        // queue and toggle USDC reserve depositor
+        await (await treasury.queue('0', usdcBond.address)).wait()
+        await treasury.toggle('0', usdcBond.address, zeroAddress)
 
-    // Set DAI and Frax bond terms
-    await daiBond.initializeBondTerms(daiBondBCV, bondVestingLength, minBondPrice, maxBondPayout, bondFee, maxBondDebt, intialBondDebt);
-    await fraxBond.initializeBondTerms(fraxBondBCV, bondVestingLength, minBondPrice, maxBondPayout, bondFee, maxBondDebt, intialBondDebt);
+        // queue and toggle deployer reserve depositor
+        await (await treasury.queue('0', deployer.address)).wait()
+        await treasury.toggle('0', deployer.address, zeroAddress)
 
-    // Set staking for DAI and Frax bond
-    await daiBond.setStaking(staking.address, stakingHelper.address);
-    await fraxBond.setStaking(staking.address, stakingHelper.address);
+        // queue and toggle deployer liquidity depositor
+        await (treasury.queue('4', deployer.address)).wait();
+        await treasury.toggle('4', deployer.address, zeroAddress);
 
-    // Initialize sDOVE and set the index
-    await sDOVE.initialize(staking.address);
-    await sDOVE.setIndex(initialIndex);
+        // queue and toggle reward manager
+        await treasury.queue('8', distributor.address);
+        await (treasury.toggle('8', distributor.address, zeroAddress)).wait();
 
-    // set distributor contract and warmup contract
-    await staking.setContract('0', distributor.address);
-    await staking.setContract('1', stakingWarmup.address);
+        // approve the treasury to spend USDC
+        await usdcBond.approve(treasury.address, largeApproval );
 
-    // Set treasury for DOVE token
-    await dove.setVault(treasury.address);
+        // Approve staking and staking helper contact to spend deployer's DOVE
+        await (dove.approve(staking.address, largeApproval)).wait();
+        await (dove.approve(stakingHelper.address, largeApproval)).wait();
 
-    // Add staking contract as distributor recipient
-    await distributor.addRecipient(staking.address, initialRewardRate);
+        await usdcBond.initializeBondTerms(usdcBondBCV, bondVestingLength, minBondPrice, maxBondPayout, bondFee, maxBondDebt, initialBondDebt);
 
-    // queue and toggle reward manager
-    await treasury.queue('8', distributor.address);
-    await treasury.toggle('8', distributor.address, zeroAddress);
+        await usdcBond.setStaking(staking.address, stakingHelper.address);
 
-    // queue and toggle deployer reserve depositor
-    await treasury.queue('0', deployer.address);
-    await treasury.toggle('0', deployer.address, zeroAddress);
+        // Initialize sDOVE and set the index
+        await sdove.initialize(staking.address);
+        await sdove.setIndex(initialIndex);
 
-    // queue and toggle liquidity depositor
-    await treasury.queue('4', deployer.address, );
-    await treasury.toggle('4', deployer.address, zeroAddress);
+         // set distributor contract and warmup contract
+        await staking.setContract('0', stakingDistributor.address);
+        await staking.setContract('1', stakingWarmup.address);
 
-    // Approve the treasury to spend DAI and Frax
-    await dai.approve(treasury.address, largeApproval );
-    await frax.approve(treasury.address, largeApproval );
+        // Set treasury for DOVE token
+        await dove.setVault(treasury.address);
 
-    // Approve dai and frax bonds to spend deployer's DAI and Frax
-    await dai.approve(daiBond.address, largeApproval );
-    await frax.approve(fraxBond.address, largeApproval );
-
-    // Approve staking and staking helper contact to spend deployer's DOVE
-    await dove.approve(staking.address, largeApproval);
-    await dove.approve(stakingHelper.address, largeApproval);
-
-    // Deposit 9,000,000 DAI to treasury, 600,000 DOVE gets minted to deployer and 8,400,000 are in treasury as excesss reserves
-    await treasury.deposit('9000000000000000000000000', dai.address, '8400000000000000');
-
-    // Deposit 5,000,000 Frax to treasury, all is profit and goes as excess reserves
-    await treasury.deposit('5000000000000000000000000', frax.address, '5000000000000000');
-
-    // Stake DOVE through helper
-    await stakingHelper.stake('100000000000');
-
-    // Bond 1,000 DOVE and Frax in each of their bonds
-    await daiBond.deposit('1000000000000000000000', '60000', deployer.address );
-    await fraxBond.deposit('1000000000000000000000', '60000', deployer.address );
-
-    console.log( "DOVE: " + dove.address );
-    console.log( "DAI: " + dai.address );
-    console.log( "Frax: " + frax.address );
-    console.log( "Treasury: " + treasury.address );
-    console.log( "Calc: " + doveBondingCalculator.address );
-    console.log( "Staking: " + staking.address );
-    console.log( "sDOVE: " + sDOVE.address );
-    console.log( "Distributor " + distributor.address);
-    console.log( "Staking Wawrmup " + stakingWarmup.address);
-    console.log( "Staking Helper " + stakingHelper.address);
-    console.log("DAI Bond: " + daiBond.address);
-    console.log("Frax Bond: " + fraxBond.address);
-}
+        // Add staking contract as distributor recipient
+        await stakingDistributor.addRecipient(staking.address, initalRewardRate);
+    }
 
 main()
     .then(() => process.exit())
