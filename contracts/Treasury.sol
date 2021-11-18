@@ -10,6 +10,13 @@ library SafeMath {
         return c;
     }
 
+    function add32(uint32 a, uint32 b) internal pure returns (uint32) {
+        uint32 c = a + b;
+        require(c >= a, "SafeMath: addition overflow");
+
+        return c;
+    }
+
     function sub(uint256 a, uint256 b) internal pure returns (uint256) {
         return sub(a, b, "SafeMath: subtraction overflow");
     }
@@ -27,6 +34,17 @@ library SafeMath {
         }
 
         uint256 c = a * b;
+        require(c / a == b, "SafeMath: multiplication overflow");
+
+        return c;
+    }
+
+    function mul32(uint32 a, uint32 b) internal pure returns (uint32) {
+        if (a == 0) {
+            return 0;
+        }
+
+        uint32 c = a * b;
         require(c / a == b, "SafeMath: multiplication overflow");
 
         return c;
@@ -56,11 +74,20 @@ library Address {
         return size > 0;
     }
 
-    function functionCall(address target, bytes memory data, string memory errorMessage) internal returns (bytes memory) {
+    function functionCall(
+        address target, 
+        bytes memory data, 
+        string memory errorMessage
+    ) internal returns (bytes memory) {
         return _functionCallWithValue(target, data, 0, errorMessage);
     }
 
-    function _functionCallWithValue(address target, bytes memory data, uint256 weiValue, string memory errorMessage) private returns (bytes memory) {
+    function _functionCallWithValue(
+        address target, 
+        bytes memory data, 
+        uint256 weiValue, 
+        string memory errorMessage
+    ) private returns (bytes memory) {
         require(isContract(target), "Address: call to non-contract");
 
         // solhint-disable-next-line avoid-low-level-calls
@@ -80,7 +107,11 @@ library Address {
         }
     }
 
-    function _verifyCallResult(bool success, bytes memory returndata, string memory errorMessage) private pure returns(bytes memory) {
+    function _verifyCallResult(
+        bool success, 
+        bytes memory returndata, 
+        string memory errorMessage
+    ) private pure returns(bytes memory) {
         if (success) {
             return returndata;
         } else {
@@ -192,7 +223,7 @@ interface IERC20Mintable {
   function mint( address account_, uint256 ammount_ ) external;
 }
 
-interface IDOVEERC20 {
+interface IOHMERC20 {
     function burnFrom(address account_, uint256 amount_) external;
 }
 
@@ -203,6 +234,7 @@ interface IBondCalculator {
 contract DoveTreasury is Ownable {
 
     using SafeMath for uint;
+    using SafeMath for uint32;
     using SafeERC20 for IERC20;
 
     event Deposit( address indexed token, uint amount, uint value );
@@ -216,80 +248,86 @@ contract DoveTreasury is Ownable {
     event ChangeQueued( MANAGING indexed managing, address queued );
     event ChangeActivated( MANAGING indexed managing, address activated, bool result );
 
-    enum MANAGING { RESERVEDEPOSITOR, RESERVESPENDER, RESERVETOKEN, RESERVEMANAGER, LIQUIDITYDEPOSITOR, LIQUIDITYTOKEN, LIQUIDITYMANAGER, DEBTOR, REWARDMANAGER, SDOVE }
+    enum MANAGING { 
+        RESERVEDEPOSITOR, 
+        RESERVESPENDER, 
+        RESERVETOKEN, 
+        RESERVEMANAGER, 
+        LIQUIDITYDEPOSITOR, 
+        LIQUIDITYTOKEN, 
+        LIQUIDITYMANAGER, 
+        DEBTOR, 
+        REWARDMANAGER, 
+        SOHM 
+    }
 
     address public immutable DOVE;
-    uint public immutable blocksNeededForQueue;
+    uint32 public immutable secondsNeededForQueue;
 
     address[] public reserveTokens; // Push only, beware false-positives.
     mapping( address => bool ) public isReserveToken;
-    mapping( address => uint ) public reserveTokenQueue; // Delays changes to mapping.
+    mapping( address => uint32 ) public reserveTokenQueue; // Delays changes to mapping.
 
     address[] public reserveDepositors; // Push only, beware false-positives. Only for viewing.
     mapping( address => bool ) public isReserveDepositor;
-    mapping( address => uint ) public reserveDepositorQueue; // Delays changes to mapping.
+    mapping( address => uint32 ) public reserveDepositorQueue; // Delays changes to mapping.
 
     address[] public reserveSpenders; // Push only, beware false-positives. Only for viewing.
     mapping( address => bool ) public isReserveSpender;
-    mapping( address => uint ) public reserveSpenderQueue; // Delays changes to mapping.
+    mapping( address => uint32 ) public reserveSpenderQueue; // Delays changes to mapping.
 
     address[] public liquidityTokens; // Push only, beware false-positives.
     mapping( address => bool ) public isLiquidityToken;
-    mapping( address => uint ) public LiquidityTokenQueue; // Delays changes to mapping.
+    mapping( address => uint32 ) public LiquidityTokenQueue; // Delays changes to mapping.
 
     address[] public liquidityDepositors; // Push only, beware false-positives. Only for viewing.
     mapping( address => bool ) public isLiquidityDepositor;
-    mapping( address => uint ) public LiquidityDepositorQueue; // Delays changes to mapping.
+    mapping( address => uint32 ) public LiquidityDepositorQueue; // Delays changes to mapping.
 
     mapping( address => address ) public bondCalculator; // bond calculator for liquidity token
 
     address[] public reserveManagers; // Push only, beware false-positives. Only for viewing.
     mapping( address => bool ) public isReserveManager;
-    mapping( address => uint ) public ReserveManagerQueue; // Delays changes to mapping.
+    mapping( address => uint32 ) public ReserveManagerQueue; // Delays changes to mapping.
 
     address[] public liquidityManagers; // Push only, beware false-positives. Only for viewing.
     mapping( address => bool ) public isLiquidityManager;
-    mapping( address => uint ) public LiquidityManagerQueue; // Delays changes to mapping.
+    mapping( address => uint32 ) public LiquidityManagerQueue; // Delays changes to mapping.
 
     address[] public debtors; // Push only, beware false-positives. Only for viewing.
     mapping( address => bool ) public isDebtor;
-    mapping( address => uint ) public debtorQueue; // Delays changes to mapping.
+    mapping( address => uint32 ) public debtorQueue; // Delays changes to mapping.
     mapping( address => uint ) public debtorBalance;
 
     address[] public rewardManagers; // Push only, beware false-positives. Only for viewing.
     mapping( address => bool ) public isRewardManager;
-    mapping( address => uint ) public rewardManagerQueue; // Delays changes to mapping.
+    mapping( address => uint32 ) public rewardManagerQueue; // Delays changes to mapping.
 
     address public sDOVE;
-    uint public sDOVEQueue; // Delays change to sDOVE address
+    uint public sOHMQueue; // Delays change to sOHM address
     
     uint public totalReserves; // Risk-free value of all assets
     uint public totalDebt;
 
     constructor (
         address _DOVE,
-        address _DAI,
-        address _Frax,
-        address _DOVEDAI,
-        uint _blocksNeededForQueue
+        address _USDC,
+        uint32 _secondsNeededForQueue
     ) {
         require( _DOVE != address(0) );
         DOVE = _DOVE;
 
-        isReserveToken[ _DAI ] = true;
-        reserveTokens.push( _DAI );
+        isReserveToken[ _USDC ] = true;
+        reserveTokens.push( _USDC );
 
-        isReserveToken[ _Frax] = true;
-        reserveTokens.push( _Frax );
+    //    isLiquidityToken[ _OHMDAI ] = true;
+    //    liquidityTokens.push( _OHMDAI );
 
-       isLiquidityToken[ _DOVEDAI ] = true;
-       liquidityTokens.push( _DOVEDAI );
-
-        blocksNeededForQueue = _blocksNeededForQueue;
+        secondsNeededForQueue = _secondsNeededForQueue;
     }
 
     /**
-        @notice allow approved address to deposit an asset for DOVE
+        @notice allow approved address to deposit an asset for OHM
         @param _amount uint
         @param _token address
         @param _profit uint
@@ -306,7 +344,7 @@ contract DoveTreasury is Ownable {
         }
 
         uint value = valueOf(_token, _amount);
-        // mint DOVE needed and store amount of rewards for distribution
+        // mint OHM needed and store amount of rewards for distribution
         send_ = value.sub( _profit );
         IERC20Mintable( DOVE ).mint( msg.sender, send_ );
 
@@ -317,7 +355,7 @@ contract DoveTreasury is Ownable {
     }
 
     /**
-        @notice allow approved address to burn DOVE for reserves
+        @notice allow approved address to burn OHM for reserves
         @param _amount uint
         @param _token address
      */
@@ -326,7 +364,7 @@ contract DoveTreasury is Ownable {
         require( isReserveSpender[ msg.sender ] == true, "Not approved" );
 
         uint value = valueOf( _token, _amount );
-        IDOVEERC20( DOVE ).burnFrom( msg.sender, value );
+        IOHMERC20( Time ).burnFrom( msg.sender, value );
 
         totalReserves = totalReserves.sub( value );
         emit ReservesUpdated( totalReserves );
@@ -347,7 +385,7 @@ contract DoveTreasury is Ownable {
 
         uint value = valueOf( _token, _amount );
 
-        uint maximumDebt = IERC20( sDOVE ).balanceOf( msg.sender ); // Can only borrow against sDOVE held
+        uint maximumDebt = IERC20( sDOVE ).balanceOf( msg.sender ); // Can only borrow against sOHM held
         uint availableDebt = maximumDebt.sub( debtorBalance[ msg.sender ] );
         require( value <= availableDebt, "Exceeds debt limit" );
 
@@ -384,13 +422,13 @@ contract DoveTreasury is Ownable {
     }
 
     /**
-        @notice allow approved address to repay borrowed reserves with DOVE
+        @notice allow approved address to repay borrowed reserves with OHM
         @param _amount uint
      */
-    function repayDebtWithDOVE( uint _amount ) external {
+    function repayDebtWithOHM( uint _amount ) external {
         require( isDebtor[ msg.sender ], "Not approved" );
 
-        IDOVEERC20( DOVE ).burnFrom( msg.sender, _amount );
+        IOHMERC20( DOVE ).burnFrom( msg.sender, _amount );
 
         debtorBalance[ msg.sender ] = debtorBalance[ msg.sender ].sub( _amount );
         totalDebt = totalDebt.sub( _amount );
@@ -463,14 +501,14 @@ contract DoveTreasury is Ownable {
     }
 
     /**
-        @notice returns DOVE valuation of asset
+        @notice returns OHM valuation of asset
         @param _token address
         @param _amount uint
         @return value_ uint
      */
     function valueOf( address _token, uint _amount ) public view returns ( uint value_ ) {
         if ( isReserveToken[ _token ] ) {
-            // convert amount to match DOVE decimals
+            // convert amount to match OHM decimals
             value_ = _amount.mul( 10 ** IERC20( DOVE ).decimals() ).div( 10 ** IERC20( _token ).decimals() );
         } else if ( isLiquidityToken[ _token ] ) {
             value_ = IBondCalculator( bondCalculator[ _token ] ).valuation( _token, _amount );
@@ -486,25 +524,25 @@ contract DoveTreasury is Ownable {
     function queue( MANAGING _managing, address _address ) external onlyManager() returns ( bool ) {
         require( _address != address(0) );
         if ( _managing == MANAGING.RESERVEDEPOSITOR ) { // 0
-            reserveDepositorQueue[ _address ] = block.number.add( blocksNeededForQueue );
+            reserveDepositorQueue[ _address ] = uint32(block.timestamp).add32( secondsNeededForQueue );
         } else if ( _managing == MANAGING.RESERVESPENDER ) { // 1
-            reserveSpenderQueue[ _address ] = block.number.add( blocksNeededForQueue );
+            reserveSpenderQueue[ _address ] = uint32(block.timestamp).add32( secondsNeededForQueue );
         } else if ( _managing == MANAGING.RESERVETOKEN ) { // 2
-            reserveTokenQueue[ _address ] = block.number.add( blocksNeededForQueue );
+            reserveTokenQueue[ _address ] = uint32(block.timestamp).add32( secondsNeededForQueue );
         } else if ( _managing == MANAGING.RESERVEMANAGER ) { // 3
-            ReserveManagerQueue[ _address ] = block.number.add( blocksNeededForQueue.mul( 2 ) );
+            ReserveManagerQueue[ _address ] = uint32(block.timestamp).add32( secondsNeededForQueue.mul32( 2 ) );
         } else if ( _managing == MANAGING.LIQUIDITYDEPOSITOR ) { // 4
-            LiquidityDepositorQueue[ _address ] = block.number.add( blocksNeededForQueue );
+            LiquidityDepositorQueue[ _address ] = uint32(block.timestamp).add32( secondsNeededForQueue );
         } else if ( _managing == MANAGING.LIQUIDITYTOKEN ) { // 5
-            LiquidityTokenQueue[ _address ] = block.number.add( blocksNeededForQueue );
+            LiquidityTokenQueue[ _address ] = uint32(block.timestamp).add32( secondsNeededForQueue );
         } else if ( _managing == MANAGING.LIQUIDITYMANAGER ) { // 6
-            LiquidityManagerQueue[ _address ] = block.number.add( blocksNeededForQueue.mul( 2 ) );
+            LiquidityManagerQueue[ _address ] = uint32(block.timestamp).add32( secondsNeededForQueue.mul32( 2 ) );
         } else if ( _managing == MANAGING.DEBTOR ) { // 7
-            debtorQueue[ _address ] = block.number.add( blocksNeededForQueue );
+            debtorQueue[ _address ] = uint32(block.timestamp).add32( secondsNeededForQueue );
         } else if ( _managing == MANAGING.REWARDMANAGER ) { // 8
-            rewardManagerQueue[ _address ] = block.number.add( blocksNeededForQueue );
-        } else if ( _managing == MANAGING.SDOVE ) { // 9
-            sDOVEQueue = block.number.add( blocksNeededForQueue );
+            rewardManagerQueue[ _address ] = uint32(block.timestamp).add32( secondsNeededForQueue );
+        } else if ( _managing == MANAGING.SOHM ) { // 9
+            sOHMQueue = uint32(block.timestamp).add32( secondsNeededForQueue );
         } else return false;
 
         emit ChangeQueued( _managing, _address );
@@ -518,7 +556,11 @@ contract DoveTreasury is Ownable {
         @param _calculator address
         @return bool
      */
-    function toggle( MANAGING _managing, address _address, address _calculator ) external onlyManager() returns ( bool ) {
+    function toggle(
+        MANAGING _managing, 
+        address _address, 
+        address _calculator 
+    ) external onlyManager() returns ( bool ) {
         require( _address != address(0) );
         bool result;
         if ( _managing == MANAGING.RESERVEDEPOSITOR ) { // 0
@@ -614,8 +656,8 @@ contract DoveTreasury is Ownable {
             result = !isRewardManager[ _address ];
             isRewardManager[ _address ] = result;
 
-        } else if ( _managing == MANAGING.SDOVE ) { // 9
-            sDOVEQueue = 0;
+        } else if ( _managing == MANAGING.SOHM ) { // 9
+            sOHMQueue = 0;
             sDOVE = _address;
             result = true;
 
@@ -633,13 +675,13 @@ contract DoveTreasury is Ownable {
         @return bool 
      */
     function requirements( 
-        mapping( address => uint ) storage queue_, 
+        mapping( address => uint32 ) storage queue_, 
         mapping( address => bool ) storage status_, 
         address _address 
     ) internal view returns ( bool ) {
         if ( !status_[ _address ] ) {
             require( queue_[ _address ] != 0, "Must queue" );
-            require( queue_[ _address ] <= block.number, "Queue not expired" );
+            require( queue_[ _address ] <= uint32(block.timestamp), "Queue not expired" );
             return true;
         } return false;
     }

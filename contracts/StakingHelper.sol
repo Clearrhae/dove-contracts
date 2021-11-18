@@ -91,10 +91,10 @@ contract StakingHelper {
         DOVE = _DOVE;
     }
 
-    function stake( uint _amount ) external {
+    function stake( uint _amount, address recipient ) external {
         IERC20( DOVE ).transferFrom( msg.sender, address(this), _amount );
         IERC20( DOVE ).approve( staking, _amount );
-        IStaking( staking ).stake( _amount, msg.sender );
-        IStaking( staking ).claim( msg.sender );
+        IStaking( staking ).stake( _amount, recipient );
+        IStaking( staking ).claim( recipient );
     }
 }
