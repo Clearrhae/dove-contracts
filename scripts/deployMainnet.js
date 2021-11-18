@@ -20,7 +20,7 @@ async function main() {
     const deadAddress = '0x0000000000000000000000000000000000000000';
     const largeApproval = '100000000000000000000000000000000';
     const usdcBondBCV = '369'; 
-    const usdcAddress = ''; //ADD USDC ADDRESS HERE
+    const usdcAddress = '0xc21223249CA28397B4B6541dfFaEcC539BfF0c59';
     const bondVestingLength = 5 * 24 * 3600; // 5 days
     const minBondPrice = '0'; //TBC: Launch Price
     const maxBondPayout = '1000';
