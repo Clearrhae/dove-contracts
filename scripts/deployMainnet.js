@@ -9,7 +9,7 @@ async function main() {
 
     // Get the signer
     const [deployer] = await ethers.getSigners();
-    console.log("DOVE Testnet Deployment with Address: " + deployer.address);
+    console.log("DOVE Mainnet Deployment with Address: " + deployer.address);
 
     // Define variables
     const initialIndex = 1000000000; // 1.0
