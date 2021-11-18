@@ -2,6 +2,7 @@
 // This should be enough of a test environment to learn about and test implementations with the Dove as of V1.1.
 // Not that the every instance of the Treasury's function 'valueOf' has been changed to 'valueOfToken'... 
 // This solidity function was conflicting w js object property name
+import IERC20_ABI from './abi/IERC20.json';
 
 const { ethers } = require("hardhat");
 
@@ -92,7 +93,11 @@ async function main() {
         })
       )
 
-      
+         
+        // Attach USDC Token 
+        export const CommonERC20 = new ethers.Contract('0x0000000000000000000000000000000000000000', IERC20_ABI);
+        const usdc = await CommonERC20.attach(usdcAddress);
+
         // queue and toggle USDC reserve depositor
         await (await treasury.queue('0', usdcBond.address)).wait()
         await treasury.toggle('0', usdcBond.address, zeroAddress)
@@ -110,7 +115,8 @@ async function main() {
         await (treasury.toggle('8', distributor.address, zeroAddress)).wait();
 
         // approve the treasury to spend USDC
-        await usdcBond.approve(treasury.address, largeApproval );
+        await (await usdc.approve(treasury.address, largeApproval)).wait();
+        await (await usdc.approve(usdcBond.address, largeApproval)).wait();
 
         // Approve staking and staking helper contact to spend deployer's DOVE
         await (dove.approve(staking.address, largeApproval)).wait();
