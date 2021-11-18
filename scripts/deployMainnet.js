@@ -95,7 +95,7 @@ async function main() {
 
          
         // Attach USDC Token 
-        export const CommonERC20 = new ethers.Contract('0x0000000000000000000000000000000000000000', IERC20_ABI);
+        const CommonERC20 = new ethers.Contract('0x0000000000000000000000000000000000000000', IERC20_ABI);
         const usdc = await CommonERC20.attach(usdcAddress);
 
         // queue and toggle USDC reserve depositor
