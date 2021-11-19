@@ -16,6 +16,12 @@ module.exports = {
       },
       {
         version: '0.7.5',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1000,
+          },
+        },
       },
       {
         version: '0.6.6',

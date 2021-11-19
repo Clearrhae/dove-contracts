@@ -2,3 +2,7 @@ node_modules/
 artifacts/
 cache/
 .env
+
+.secret
+.secret.etherscan
+.secret.mainnet

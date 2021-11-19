@@ -1,261 +1,149 @@
-// @dev. This script will deploy this V1.1 of Dove. It will deploy the whole ecosystem.
+// @dev. This script will deploy this V1.1 of Dove. It will deploy the whole ecosystem except for the LP tokens and their bonds. 
+// This should be enough of a test environment to learn about and test implementations with the Dove as of V1.1.
+// Not that the every instance of the Treasury's function 'valueOf' has been changed to 'valueOfToken'... 
+// This solidity function was conflicting w js object property name
+import IERC20_ABI from './abi/IERC20.json';
 
-const { ethers } = require('hardhat')
-const UniswapV2ABI = require('./IUniswapV2Factory.json').abi
+const { ethers } = require("hardhat");
 
 async function main() {
-  const [deployer] = await ethers.getSigners()
-  const daoAddr = '0x929A27c46041196e1a49C7B459d63eC9A20cd879'
-  console.log('Deploying contracts with the account: ' + deployer.address)
 
-  // Initial staking index
-  const initialIndex = '1000000000'
+    // Get the signer
+    const [deployer] = await ethers.getSigners();
+    console.log("DOVE Mainnet Deployment with Address: " + deployer.address);
 
-  const { provider } = deployer
-  const firstEpochTime = 1635897600 // 2021-11-3 00:00 UTC
-  console.log('First epoch timestamp: ' + firstEpochTime)
+    // Define variables
+    const initialIndex = 1000000000; // 1.0
+    const firstEpochTimestamp = (await deployer.getBlock()).timestamp + 30 * 60; // 30 minutes from now
+    const epochDuration = 28800; // 8 hours
+    const initalRewardRate = '5000';
+    const deadAddress = '0x0000000000000000000000000000000000000000';
+    const largeApproval = '100000000000000000000000000000000';
+    const usdcBondBCV = '369'; 
+    const usdcAddress = '0xc21223249CA28397B4B6541dfFaEcC539BfF0c59';
+    const bondVestingLength = 5 * 24 * 3600; // 5 days
+    const minBondPrice = '0'; //TBC: Launch Price
+    const maxBondPayout = '1000';
+    const bondFee = '10000'
+    const maxBondDebt = '1000000000000000'
+    const initialBondDebt = '0'
+    const warmupPeriod = '3'
 
-  // What epoch will be first epoch
-  const firstEpochNumber = '1'
+    // Deploy the Dove contract
+    const DOVE = await ethers.getContractFactory("DoveERC20Token");
+    const dove = await DOVE.deploy();
+    console.log("Dove deployed at: " + dove.address);
 
-  // How many seconds are in each epoch
-  const epochLengthInSeconds = 86400 / 3
-  // const epochLengthInSeconds = 60*10
+    // Deploy the sDOVE contract
+    const sDOVE = await ethers.getContractFactory("sDove");
+    const sdove = await sDOVE.deploy();
+    console.log("sDove deployed at: " + sDOVE.address);
 
-  // Initial reward rate for epoch
-  const initialRewardRate = '5000'
+    // Deploy the Treasury contract
+    const Treasury = await ethers.getContractFactory("DoveTreasury");
+    const treasury = await Treasury.deploy(dove.address, usdcAddress, 0);
+    console.log("Treasury deployed at: " + treasury.address);
 
-  // Ethereum 0 address, used when toggling changes in treasury
-  const zeroAddress = '0x0000000000000000000000000000000000000000'
+    // Deploy the BondingCalculator contract
+    const BondingCalculator = await ethers.getContractFactory("DoveBondingCalculator");
+    const bondingCalculator = await BondingCalculator.deploy(dove.address);
+    console.log("BondingCalculator deployed at: " + bondingCalculator.address);
 
-  // MAI bond BCV
-  const maiBondBCV = '300'
+    // Deploy the staking distributor contract
+    const StakingDistributor = await ethers.getContractFactory("Distributor");
+    const stakingDistributor = await StakingDistributor.deploy(treasury.address, dove.address, epochDuration, firstEpochTimestamp);
+    console.log("StakingDistributor deployed at: " + stakingDistributor.address);
 
-  // Bond vesting length in seconds.
-  const bondVestingLength = 5 * 24 * 3600
+    // Deploy the staking contract
+    const Staking = await ethers.getContractFactory("DoveStaking");
+    const staking = await Staking.deploy(dove.address, sdove.address, epochDuration, 1, firstEpochTimestamp);
+    console.log("Staking deployed at: " + staking.address);
 
-  // Min bond price
-  const minBondPrice = '600'
+    // Deploy staking warmup contract
+    const StakingWarmup = await ethers.getContractFactory('StakingWarmup');
+    const stakingWarmup = await StakingWarmup.deploy(staking.address, sdove.address);
+    console.log("StakingWarmup deployed at: " + stakingWarmup.address);
 
-  // Max bond payout, 1000 = 1% of CLAM total supply
-  const maxBondPayout = '1000'
+    // Deploy staking helper contract
+    const StakingHelper = await ethers.getContractFactory('StakingHelper');
+    const stakingHelper = await StakingHelper.deploy(staking.address, dove.address);
+    console.log("StakingHelper deployed at: " + stakingHelper.address);
 
-  // DAO fee for bond
-  const bondFee = '10000'
+    // Deploy the Bonding contract
+    const Bonding = await ethers.getContractFactory("DoveBondDepository");
+    const usdcBond = await Bonding.deploy(dove.address, usdcAddress, treasury.address, deployer.address, deadAddress);
+    console.log("USDC Bonding deployed at: " + usdcBond.address);
 
-  // Max debt bond can take on
-  const maxBondDebt = '8000000000000000'
+    console.log(
+        JSON.stringify({
+          DOVE: dove.address,
+          sDOVE: sdove.address,
+          Treasury: treasury.address,
+          BondingCalculator: bondingCalculator.address,
+          StakingDistributor: stakingDistributor.address,
+          Staking: staking.address,
+          StakingWarmpup: stakingWarmup.address,
+          StakingHelper: stakingHelper.address,
+          RESERVES: {
+            USDC: usdcAddress,
+          },
+          BONDS: {
+            USDC: usdcBond.address,
+          },
+        })
+      )
 
-  // Initial Bond debt
-  const initialBondDebt = '0'
+         
+        // Attach USDC Token 
+        const CommonERC20 = new ethers.Contract('0x0000000000000000000000000000000000000000', IERC20_ABI);
+        const usdc = await CommonERC20.attach(usdcAddress);
 
-  const warmupPeriod = '3'
+        // queue and toggle USDC reserve depositor
+        await (await treasury.queue('0', usdcBond.address)).wait()
+        await treasury.toggle('0', usdcBond.address, zeroAddress)
 
-  const chainId = (await provider.getNetwork()).chainId
-  const quickswapFactoryAddr =
-    chainId === 80001
-      ? '0x69004509291F4a4021fA169FafdCFc2d92aD02Aa'
-      : '0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32'
-  const maiAddr = '0xa3Fa99A148fA48D14Ed51d610c367C61876997F1'
+        // queue and toggle deployer reserve depositor
+        await (await treasury.queue('0', deployer.address)).wait()
+        await treasury.toggle('0', deployer.address, zeroAddress)
 
-  // Deploy CLAM
-  const CLAM = await ethers.getContractFactory('DoveClamERC20')
-  const clam = CLAM.attach('0x4d6A30EFBE2e9D7A9C143Fce1C5Bb30d9312A465')
-  // const clam = await CLAM.deploy()
-  // console.log('CLAM deployed: ' + clam.address)
+        // queue and toggle deployer liquidity depositor
+        await (treasury.queue('4', deployer.address)).wait();
+        await treasury.toggle('4', deployer.address, zeroAddress);
 
-  const uniswapFactory = new ethers.Contract(
-    quickswapFactoryAddr,
-    UniswapV2ABI,
-    deployer
-  )
-  // await (await uniswapFactory.createPair(clam.address, maiAddr)).wait()
-  const lpAddress = await uniswapFactory.getPair(clam.address, maiAddr)
-  console.log('LP: ' + lpAddress)
+        // queue and toggle reward manager
+        await treasury.queue('8', distributor.address);
+        await (treasury.toggle('8', distributor.address, zeroAddress)).wait();
 
-  // Deploy bonding calc
-  const BondingCalculator = await ethers.getContractFactory(
-    'DoveBondingCalculator'
-  )
-  // const bondingCalculator = await BondingCalculator.deploy(clam.address)
-  const bondingCalculator = BondingCalculator.attach(
-    '0x47655e27667E5B4EC9EB70799f281524d031381c'
-  )
+        // approve the treasury to spend USDC
+        await (await usdc.approve(treasury.address, largeApproval)).wait();
+        await (await usdc.approve(usdcBond.address, largeApproval)).wait();
 
-  // Deploy treasury
-  const Treasury = await ethers.getContractFactory('DoveTreasury')
-  const treasury = await Treasury.attach(
-    '0xab328Ca61599974b0f577d1F8AB0129f2842d765'
-  )
-  // const treasury = await Treasury.deploy(
-  //   clam.address,
-  //   maiAddr,
-  //   lpAddress,
-  //   bondingCalculator.address,
-  //   '43200'
-  // )
-  // console.log('treasury deployed: ' + treasury.address)
+        // Approve staking and staking helper contact to spend deployer's DOVE
+        await (dove.approve(staking.address, largeApproval)).wait();
+        await (dove.approve(stakingHelper.address, largeApproval)).wait();
 
-  // Deploy staking distributor
-  const StakingDistributor = await ethers.getContractFactory(
-    'DoveStakingDistributor'
-  )
-  const stakingDistributor = StakingDistributor.attach(
-    '0xD42938418E648b981bA2814b0C8b4F6f35CE61B8'
-  )
-  // const stakingDistributor = await StakingDistributor.deploy(
-  //   treasury.address,
-  //   clam.address,
-  //   epochLengthInSeconds,
-  //   firstEpochTime
-  // )
-  // await stakingDistributor.deployTransaction.wait()
+        await usdcBond.initializeBondTerms(usdcBondBCV, bondVestingLength, minBondPrice, maxBondPayout, bondFee, maxBondDebt, initialBondDebt);
 
-  // Deploy sCLAM
-  const StakedCLAM = await ethers.getContractFactory('StakedDoveClamERC20')
-  const sCLAM = StakedCLAM.attach('0x3949F058238563803b5971711Ad19551930C8209')
-  // const sCLAM = await StakedCLAM.deploy()
-  // await sCLAM.deployTransaction.wait()
+        await usdcBond.setStaking(staking.address, stakingHelper.address);
 
-  // Deploy Staking
-  const Staking = await ethers.getContractFactory('DoveStaking')
-  const staking = await Staking.attach(
-    '0xcF2A11937A906e09EbCb8B638309Ae8612850dBf'
-  )
-  // const staking = await Staking.deploy(
-  //   clam.address,
-  //   sCLAM.address,
-  //   epochLengthInSeconds,
-  //   firstEpochNumber,
-  //   firstEpochTime
-  // )
-  // await staking.deployTransaction.wait()
+        // Initialize sDOVE and set the index
+        await sdove.initialize(staking.address);
+        await sdove.setIndex(initialIndex);
 
-  // Deploy staking warmpup
-  const StakingWarmup = await ethers.getContractFactory('DoveStakingWarmup')
-  const stakingWarmup = StakingWarmup.attach(
-    '0x314de54E2B64E36F4B0c75079C7FB7f894750014'
-  )
-  // const stakingWarmup = await StakingWarmup.deploy(
-  //   staking.address,
-  //   sCLAM.address
-  // )
-  // await stakingWarmup.deployTransaction.wait()
+         // set distributor contract and warmup contract
+        await staking.setContract('0', stakingDistributor.address);
+        await staking.setContract('1', stakingWarmup.address);
 
-  // Deploy staking helper
-  const StakingHelper = await ethers.getContractFactory('DoveStakingHelper')
-  const stakingHelper = StakingHelper.attach(
-    '0x22F587EcF472670c61aa4715d0b76D2fa40A9798'
-  )
-  // const stakingHelper = await StakingHelper.deploy(
-  //   staking.address,
-  //   clam.address
-  // )
-  // await stakingHelper.deployTransaction.wait()
+        // Set treasury for DOVE token
+        await dove.setVault(treasury.address);
 
-  // Deploy MAI bond
-  const MAIBond = await ethers.getContractFactory('DoveBondDepository')
-  const maiBond = MAIBond.attach('0x28077992bFA9609Ae27458A766470b03D43dEe8A')
-  // const maiBond = await MAIBond.deploy(
-  //   clam.address,
-  //   maiAddr,
-  //   treasury.address,
-  //   daoAddr,
-  //   zeroAddress
-  // )
-  // await maiBond.deployTransaction.wait()
-
-  const MaiClamBond = await ethers.getContractFactory('DoveBondDepository')
-  // const maiClamBond = MaiClamBond.attach(
-  //   '0x79B47c03B02019Af78Ee0de9B0b3Ac0786338a0d'
-  // )
-  const maiClamBond = await MaiClamBond.deploy(
-    clam.address,
-    lpAddress,
-    treasury.address,
-    daoAddr,
-    bondingCalculator.address
-  )
-  await maiClamBond.deployTransaction.wait()
-
-  console.log(
-    JSON.stringify({
-      sCLAM_ADDRESS: sCLAM.address,
-      CLAM_ADDRESS: clam.address,
-      MAI_ADDRESS: maiAddr,
-      TREASURY_ADDRESS: treasury.address,
-      CLAM_BONDING_CALC_ADDRESS: bondingCalculator.address,
-      STAKING_ADDRESS: staking.address,
-      STAKING_HELPER_ADDRESS: stakingHelper.address,
-      RESERVES: {
-        MAI: maiAddr,
-        MAI_CLAM: lpAddress,
-      },
-      BONDS: {
-        MAI: maiBond.address,
-        MAI_CLAM: maiClamBond.address,
-      },
-    })
-  )
-
-  // queue and toggle MAI reserve depositor
-  // await (await treasury.queue('0', maiBond.address)).wait()
-
-  // queue and toggle MAI-CLAM liquidity depositor
-  // await (await treasury.queue('4', maiClamBond.address)).wait()
-
-  // Set bond terms
-  // await (await maiBond.initializeBondTerms(
-  //   maiBondBCV,
-  //   bondVestingLength,
-  //   minBondPrice,
-  //   maxBondPayout,
-  //   bondFee,
-  //   maxBondDebt,
-  //   initialBondDebt
-  // )).wait()
-  // await (await maiClamBond.initializeBondTerms(
-  //   '40',
-  //   bondVestingLength,
-  //   minBondPrice,
-  //   maxBondPayout,
-  //   bondFee,
-  //   maxBondDebt,
-  //   initialBondDebt
-  // )).wait()
-
-  // Set staking for bonds
-  // await (await maiBond.setStaking(stakingHelper.address, true)).wait()
-  await (await maiClamBond.setStaking(stakingHelper.address, true)).wait()
-
-  // Initialize sCLAM and set the index
-  // await (await sCLAM.initialize(staking.address)).wait()
-  // await (await sCLAM.setIndex(initialIndex)).wait()
-
-  // set distributor contract and warmup contract
-  // await (await staking.setContract('0', stakingDistributor.address)).wait()
-  // await (await staking.setContract('1', stakingWarmup.address)).wait()
-  // await (await staking.setWarmup(warmupPeriod)).wait()
-
-  // Set treasury for CLAM token
-  // await (await clam.setVault(treasury.address)).wait()
-
-  // Add staking contract as distributor recipient
-  // await (await stakingDistributor.addRecipient(staking.address, initialRewardRate)).wait()
-
-  // queue and toggle reward manager
-  // await (await treasury.queue('8', stakingDistributor.address)).wait()
-
-  // TODO: toggle after 43200 blocks
-  //  await treasury.toggle('0', maiBond.address, zeroAddress)
-  //  await (await treasury.toggle('4', maiClamBond.address, zeroAddress)).wait()
-  //  await treasury.toggle('8', stakingDistributor.address, zeroAddress)
-  // await treasury.queue('9', sCLAM.address)
-}
+        // Add staking contract as distributor recipient
+        await stakingDistributor.addRecipient(staking.address, initalRewardRate);
+    }
 
 main()
-  .then(() => process.exit())
-  .catch((error) => {
-    console.error(error)
-    process.exit(1)
-  })
+    .then(() => process.exit())
+    .catch(error => {
+        console.error(error);
+        process.exit(1);
+})

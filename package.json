@@ -12,7 +12,9 @@
     "start": "npx hardhat run scripts/deployIDO.js",
     "lint:sol": "solhint -f table contracts/**/*.sol",
     "bonds:monitor": "npx hardhat run ./scripts/monitorBonds.js --network polygon-mainnet",
-    "bonds:adjust": "npx hardhat run ./scripts/adjustBonds.js --network polygon-mainnet"
+    "bonds:adjust": "npx hardhat run ./scripts/adjustBonds.js --network polygon-mainnet",
+    "deploy:testnet": "npx hardhat run scripts/deployTestnet.js --network polygon-mumbai",
+    "deploy:mainnet": "npx hardhat run scripts/deployMainnet.js --network polygon-mainnet"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.2"
