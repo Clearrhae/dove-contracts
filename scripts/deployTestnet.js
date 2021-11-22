@@ -4,6 +4,7 @@
 // This solidity function was conflicting w js object property name
 
 const { ethers } = require("hardhat");
+import UniswapV2_ABI from '../contracts/abi/IUniswapV2Factory.json';
 
 async function main() {
 
@@ -26,6 +27,7 @@ async function main() {
     const maxBondDebt = '1000000000000000'
     const initialBondDebt = '0'
     const warmupPeriod = '3'
+    const FactoryAddr = '0xF9db97007782ae35051a97790766531684C4943c' //TBC: Factory Address
 
     // Deploy the mock usdc token and mint some tokens to the deployer
     const USDC = await ethers.getContractFactory("MockUSDC").deploy();
@@ -74,74 +76,98 @@ async function main() {
     const stakingHelper = await StakingHelper.deploy(staking.address, dove.address);
     console.log("StakingHelper deployed at: " + stakingHelper.address);
 
+    const uniswapFactory = new ethers.Contract(
+      FactoryAddr,
+      UniswapV2_ABI.abi,
+      deployer
+    )
+
+    await (await uniswapFactory.createPair(dove.address, usdcAddress)).wait()
+    const lpAddress = await uniswapFactory.getPair(dove.address, usdcAddress)
+    console.log("DOVE-USDC LP deployed at: " + lpAddress);
+
     // Deploy the Bonding contract
     const Bonding = await ethers.getContractFactory("DoveBondDepository");
     const usdcBond = await Bonding.deploy(dove.address, usdcAddress, treasury.address, deployer.address, deadAddress);
     console.log("USDC Bonding deployed at: " + usdcBond.address);
 
+    // Deploy the DOVE-USDC Bonding contract
+    const DoveUsdcBonding = await ethers.getContractFactory("DoveBondDepository");
+    const doveUsdcBond = await DoveUsdcBonding.deploy(dove.address, lpAddress, treasury.address, deployer.address, bondingCalculator.address);
+    console.log("DOVE-USDC LP Bonding deployed at: " + doveUsdcBond.address);
+
+    // Approve spending of mock USDC tokens
+    await (await usdc.approve(usdcBond.address, largeApproval)).wait();
+    await (await usdc.approve(treasury.address, largeApproval)).wait();
+
+    // queue and toggle USDC reserve depositor
+    await (await treasury.queue('0', usdcBond.address)).wait()
+    await treasury.toggle('0', usdcBond.address, deadAddress)
+
+    // queue and toggle deployer reserve depositor
+    await (await treasury.queue('0', deployer.address)).wait()
+    await treasury.toggle('0', deployer.address, deadAddress)
+
+    // queue and toggle deployer liquidity depositor
+    await (treasury.queue('4', deployer.address)).wait();
+    await treasury.toggle('4', deployer.address, deadAddress);
+
+    // queue and toggle DOVE-USDC liquidity depositor
+    await (await treasury.queue('4', doveUsdcBond.address)).wait()
+    await treasury.toggle('4', doveUsdcBond.address, deadAddress)
+
+    // queue and toggle reward manager
+    await treasury.queue('8', distributor.address);
+    await (treasury.toggle('8', distributor.address, deadAddress)).wait();
+
+    // approve the treasury to spend USDC
+    await usdcBond.approve(treasury.address, largeApproval );
+
+    // Approve staking and staking helper contact to spend deployer's DOVE
+    await (dove.approve(staking.address, largeApproval)).wait();
+    await (dove.approve(stakingHelper.address, largeApproval)).wait();
+
+    await usdcBond.initializeBondTerms(usdcBondBCV, bondVestingLength, minBondPrice, maxBondPayout, bondFee, maxBondDebt, initialBondDebt);
+    await doveUsdcBond.initializeBondTerms('100', bondVestingLength, minBondPrice, maxBondPayout, bondFee, maxBondDebt, initialBondDebt);
+
+    await usdcBond.setStaking(staking.address, stakingHelper.address);
+    await doveUsdcBond.setStaking(staking.address, stakingHelper.address);
+
+    // Initialize sDOVE and set the index
+    await sdove.initialize(staking.address);
+    await sdove.setIndex(initialIndex);
+
+      // set distributor contract and warmup contract
+    await staking.setContract('0', stakingDistributor.address);
+    await staking.setContract('1', stakingWarmup.address);
+
+    // Set treasury for DOVE token
+    await dove.setVault(treasury.address);
+
+    // Add staking contract as distributor recipient
+    await stakingDistributor.addRecipient(staking.address, initalRewardRate);
+
     console.log(
-        JSON.stringify({
-          DOVE: dove.address,
-          sDOVE: sdove.address,
-          Treasury: treasury.address,
-          BondingCalculator: bondingCalculator.address,
-          StakingDistributor: stakingDistributor.address,
-          Staking: staking.address,
-          StakingWarmpup: stakingWarmup.address,
-          StakingHelper: stakingHelper.address,
-          RESERVES: {
-            USDC: usdcAddress,
-          },
-          BONDS: {
-            USDC: usdcBond.address,
-          },
-        })
-      )
-
-        // Approve spending of mock USDC tokens
-        await (await usdc.approve(usdcBond.address, largeApproval)).wait();
-        await (await usdc.approve(treasury.address, largeApproval)).wait();
-
-        // queue and toggle USDC reserve depositor
-        await (await treasury.queue('0', usdcBond.address)).wait()
-        await treasury.toggle('0', usdcBond.address, zeroAddress)
-
-        // queue and toggle deployer reserve depositor
-        await (await treasury.queue('0', deployer.address)).wait()
-        await treasury.toggle('0', deployer.address, zeroAddress)
-
-        // queue and toggle deployer liquidity depositor
-        await (treasury.queue('4', deployer.address)).wait();
-        await treasury.toggle('4', deployer.address, zeroAddress);
-
-        // queue and toggle reward manager
-        await treasury.queue('8', distributor.address);
-        await (treasury.toggle('8', distributor.address, zeroAddress)).wait();
-
-        // approve the treasury to spend USDC
-        await usdcBond.approve(treasury.address, largeApproval );
-
-        // Approve staking and staking helper contact to spend deployer's DOVE
-        await (dove.approve(staking.address, largeApproval)).wait();
-        await (dove.approve(stakingHelper.address, largeApproval)).wait();
-
-        await usdcBond.initializeBondTerms(usdcBondBCV, bondVestingLength, minBondPrice, maxBondPayout, bondFee, maxBondDebt, initialBondDebt);
-
-        await usdcBond.setStaking(staking.address, stakingHelper.address);
-
-        // Initialize sDOVE and set the index
-        await sdove.initialize(staking.address);
-        await sdove.setIndex(initialIndex);
-
-         // set distributor contract and warmup contract
-        await staking.setContract('0', stakingDistributor.address);
-        await staking.setContract('1', stakingWarmup.address);
-
-        // Set treasury for DOVE token
-        await dove.setVault(treasury.address);
-
-        // Add staking contract as distributor recipient
-        await stakingDistributor.addRecipient(staking.address, initalRewardRate);
+      JSON.stringify({
+        DOVE: dove.address,
+        sDOVE: sdove.address,
+        Treasury: treasury.address,
+        BondingCalculator: bondingCalculator.address,
+        StakingDistributor: stakingDistributor.address,
+        Staking: staking.address,
+        StakingWarmpup: stakingWarmup.address,
+        StakingHelper: stakingHelper.address,
+        RESERVES: {
+          USDC: usdcAddress,
+          DOVEUSDC: lpAddress,
+        },
+        BONDS: {
+          USDC: usdcBond.address,
+          DOVEUSDC: doveUsdcBond.address,
+        },
+      })
+    )
+    
     }
 
 main()
