@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity 0.7.5;
 
 
@@ -59,7 +60,8 @@ interface IDAI {
   function move(address src, address dst, uint wad) external;
 
     // --- Approve by signature ---
-  function permit(address holder, address spender, uint256 nonce, uint256 expiry, bool allowed, uint8 v, bytes32 r, bytes32 s) external;
+  function permit(address holder, address spender, uint256 nonce, 
+  uint256 expiry, bool allowed, uint8 v, bytes32 r, bytes32 s) external;
 }
 
 ////// /nix/store/8xb41r4qd0cjb63wcrxf1qmfg88p0961-dss-6fd7de0/src/usdc.sol
@@ -127,7 +129,8 @@ contract MockUSDC is LibNote {
 
     // --- EIP712 niceties ---
     bytes32 public DOMAIN_SEPARATOR;
-    // bytes32 public constant PERMIT_TYPEHASH = keccak256("Permit(address holder,address spender,uint256 nonce,uint256 expiry,bool allowed)");
+    // bytes32 public constant PERMIT_TYPEHASH = 
+    // keccak256("Permit(address holder,address spender,uint256 nonce,uint256 expiry,bool allowed)");
     bytes32 public constant PERMIT_TYPEHASH = 0xea2aa0a1be11a07ed86d755c93467f4f82362b452371d1ba94d1715123511acb;
 
     constructor(uint256 chainId_) {
@@ -181,7 +184,8 @@ contract MockUSDC is LibNote {
     function mint(address usr, uint wad) external {
 
       if(wards[msg.sender] == 0) {
-        require(add(wad, daiMintedToday[msg.sender]) <= dailyDAILimit || sub(block.number, lastMintRestart[msg.sender]) >= 6500 && wad <= dailyDAILimit, "Over daily DAI Limit");
+        require(add(wad, daiMintedToday[msg.sender]) <= dailyDAILimit || 
+        sub(block.number, lastMintRestart[msg.sender]) >= 6500 && wad <= dailyDAILimit, "Over daily DAI Limit");
         if( sub(block.number, lastMintRestart[msg.sender]) >= 6500 ) {
             daiMintedToday[msg.sender] = wad;
             lastMintRestart[msg.sender] = block.number;
