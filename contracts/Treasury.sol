@@ -364,7 +364,7 @@ contract DoveTreasury is Ownable {
         require( isReserveSpender[ msg.sender ] == true, "Not approved" );
 
         uint value = valueOf( _token, _amount );
-        IOHMERC20( Time ).burnFrom( msg.sender, value );
+        IOHMERC20( DOVE ).burnFrom( msg.sender, value );
 
         totalReserves = totalReserves.sub( value );
         emit ReservesUpdated( totalReserves );
