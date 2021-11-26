@@ -706,7 +706,7 @@ contract DoveIDO is Ownable {
         uint256 _saleLength,
         uint256 _startOfSale
     ) external onlyOwner returns (bool) {
-        require(initialized == false, 'Already initialized');
+        require(cancelled == false, 'Presale is cancelled.');
         initialized = true;
         whiteListEnabled = true;
         totalAmount = _totalAmount;
