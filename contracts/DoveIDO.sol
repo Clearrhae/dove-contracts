@@ -616,7 +616,7 @@ interface ITreasury {
         uint256 _profit
     ) external returns (uint256 send_);
 
-    function valueOfToken(address _token, uint256 _amount)
+    function valueOf(address _token, uint256 _amount)
         external
         view
         returns (uint256 value_);
@@ -805,7 +805,7 @@ contract DoveIDO is Ownable {
         IERC20(USDC).transfer(usdcDoveLP, 750000 * 1e18);
         IERC20(DOVE).transfer(usdcDoveLP, 5000 * 1e9);
         uint256 lpBalance = IUniswapV2Pair(usdcDoveLP).mint(address(this));
-        uint256 valueOfToken = ITreasury(treasury).valueOfToken(
+        uint256 valueOf = ITreasury(treasury).valueOf(
             usdcDoveLP,
             lpBalance
         );
@@ -814,7 +814,7 @@ contract DoveIDO is Ownable {
         uint256 zeroMinted = ITreasury(treasury).deposit(
             lpBalance,
             usdcDoveLP,
-            valueOfToken
+            valueOf
         );
         require(zeroMinted == 0, 'should not mint any DOVE');
         IERC20(DOVE).approve(staking, doveMinted);
