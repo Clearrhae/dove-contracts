@@ -782,6 +782,7 @@ contract DoveIDO is Ownable {
         require(cancelled, 'ido is not cancelled');
         uint256 amount = purchasedAmounts[msg.sender];
         IERC20(USDC).transfer(msg.sender, (amount / 1e9) * salePrice);
+        purchasedAmounts[msg.sender] = 0;
     }
 
     function claim(address _recipient) public {
