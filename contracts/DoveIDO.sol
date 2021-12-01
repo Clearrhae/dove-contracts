@@ -781,8 +781,9 @@ contract DoveIDO is Ownable {
     function withdraw() external {
         require(cancelled, 'ido is not cancelled');
         uint256 amount = purchasedAmounts[msg.sender];
-        IERC20(USDC).transfer(msg.sender, (amount / 1e9) * salePrice);
+        require(amount > 0, 'no amount to withdraw');
         purchasedAmounts[msg.sender] = 0;
+        IERC20(USDC).transfer(msg.sender, (amount / 1e9) * salePrice);
     }
 
     function claim(address _recipient) public {
