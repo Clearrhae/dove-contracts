@@ -789,8 +789,8 @@ contract DoveIDO is Ownable {
     function claim(address _recipient) public {
         require(finalized, 'only can claim after finalized');
         require(purchasedAmounts[_recipient] > 0, 'not purchased');
-        IStaking(staking).stake(purchasedAmounts[_recipient], _recipient);
         purchasedAmounts[_recipient] = 0;
+        IStaking(staking).stake(purchasedAmounts[_recipient], _recipient);
     }
 
     function finalize(address _receipt) external onlyOwner {
