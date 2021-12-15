@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.0",
+    "@truffle/hdwallet-provider": "^2.0.0",
     "dotenv": "^10.0.0"
   },
   "devDependencies": {
@@ -26,8 +27,9 @@
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
     "clean": "npx hardhat clean",
-    "start": "npx hardhat run scripts/deployAll.js --network cronos-testnet",
+    "start": "npx hardhat run scripts/deployMainnet.js --network cronos-testnet",
     "startIDO": "npx hardhat run scripts/deployIDO.js --network cronos-testnet",
+    "startTestnet": "npx hardhat run scripts/deployTestnet.js --network cronos-testnet",
     "lint:sol": "solhint -f table contracts/**/*.sol"
   },
   "repository": {
