@@ -2,8 +2,8 @@
 // This should be enough of a test environment to learn about and test implementations with the Dove as of V1.1.
 // Not that the every instance of the Treasury's function 'valueOf' has been changed to 'valueOfToken'... 
 // This solidity function was conflicting w js object property name
-import IERC20_ABI from '../contracts/abi/IERC20.json';
-import UniswapV2_ABI from '../contracts/abi/IUniswapV2Factory.json';
+const IERC20_ABI = require('../contracts/abi/IERC20.json');
+const UniswapV2_ABI = require('../contracts/abi/IUniswapV2Factory.json').abi;
 
 const { ethers } = require("hardhat");
 
@@ -73,7 +73,7 @@ async function main() {
 
     const uniswapFactory = new ethers.Contract(
       FactoryAddr,
-      UniswapV2_ABI.abi,
+      UniswapV2_ABI,
       deployer
     )
 
@@ -92,7 +92,7 @@ async function main() {
     console.log("DOVE-USDC LP Bonding deployed at: " + doveUsdcBond.address);
          
     // Attach USDC Token 
-    const CommonERC20 = new ethers.Contract('0x0000000000000000000000000000000000000000', IERC20_ABI.abi);
+    const CommonERC20 = new ethers.Contract('0x0000000000000000000000000000000000000000', IERC20_ABI);
     const usdc = await CommonERC20.attach(usdcAddress);
 
     // queue and toggle USDC reserve depositor
@@ -122,9 +122,9 @@ async function main() {
     // Approve staking and staking helper contact to spend deployer's DOVE
     await (dove.approve(staking.address, largeApproval)).wait();
     await (dove.approve(stakingHelper.address, largeApproval)).wait();
-
-    await usdcBond.initializeBondTerms(usdcBondBCV, bondVestingLength, minBondPrice, maxBondPayout, bondFee, maxBondDebt, initialBondDebt);
-    await doveUsdcBond.initializeBondTerms('100', bondVestingLength, minBondPrice, maxBondPayout, bondFee, maxBondDebt, initialBondDebt);
+    //uint _controlVariable, uint _minimumPrice, uint _maxPayout, uint _fee, uint _maxDebt, uint _initialDebt, uint32 _vestingTerm
+    await usdcBond.initializeBondTerms(usdcBondBCV, minBondPrice, maxBondPayout, bondFee, maxBondDebt, initialBondDebt, );
+    await doveUsdcBond.initializeBondTerms('100', minBondPrice, maxBondPayout, bondFee, maxBondDebt, initialBondDebt, );
 
     await usdcBond.setStaking(staking.address, stakingHelper.address);
     await doveUsdcBond.setStaking(staking.address, stakingHelper.address);

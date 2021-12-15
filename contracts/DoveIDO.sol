@@ -720,7 +720,7 @@ contract DoveIDO is Ownable {
         if (whiteListEnabled) {
             return totalAmount.div(totalWhiteListed);
         } else {
-            return Math.min(200 * 1e9, totalAmount);
+            return Math.min(100 * 1e9, totalAmount); //TBC
         }
     }
 
@@ -796,16 +796,16 @@ contract DoveIDO is Ownable {
     function finalize(address _receipt) external onlyOwner {
         require(totalAmount == 0, 'need all doves to be sold');
 
-        uint256 usdcInTreasure = 250000 * 1e18;
+        uint256 usdcInTreasure = 1000000 * 1e18; //TBC
 
         IERC20(USDC).approve(treasury, usdcInTreasure);
         uint256 doveMinted = ITreasury(treasury).deposit(usdcInTreasure, USDC, 0);
 
-        require(doveMinted == 10000 * 1e9);
+        require(doveMinted == 1000000 * 1e9); //TBC
 
         // dev: create lp with 150 USDC per DOVE
-        IERC20(USDC).transfer(usdcDoveLP, 750000 * 1e18);
-        IERC20(DOVE).transfer(usdcDoveLP, 5000 * 1e9);
+        IERC20(USDC).transfer(usdcDoveLP, 750000 * 1e18); //TBC
+        IERC20(DOVE).transfer(usdcDoveLP, 5000 * 1e9); //TBC
         uint256 lpBalance = IUniswapV2Pair(usdcDoveLP).mint(address(this));
         uint256 valueOf = ITreasury(treasury).valueOf(
             usdcDoveLP,

@@ -22,45 +22,51 @@ async function main() {
   // Define variables
   const initialIndex = 1000000000; // 1.0
   const { provider } = deployer;
-  const firstEpochTimestamp = (await provider.getBlock()).timestamp + 60 * 60; // 60 minutes from now
+  const firstEpochTimestamp = (await provider.getBlock()).timestamp + 180 * 60; // 60 minutes from now
   const epochDuration = 28800; // 8 hours
   const initalRewardRate = "5000";
   const deadAddress = "0x0000000000000000000000000000000000000000";
   const largeApproval = "100000000000000000000000000000000";
-  const usdcBondBCV = "369";
+  const usdcBondBCV = "300";
   const bondVestingLength = 5 * 24 * 3600; // 5 days
-  const minBondPrice = "100"; //TBC: Launch Price
+  const minBondPrice = "14000"; //TBC: Launch Price
   const maxBondPayout = "1000";
   const bondFee = "10000";
   const maxBondDebt = "1000000000000000";
   const initialBondDebt = "0";
-  const warmupPeriod = "3";
+  const warmupPeriod = "0";
   const initialMint = "10000000000000000000000000";
 
   // Deploy the mock usdc token and mint some tokens to the deployer
   const USDC = await ethers.getContractFactory("MockUSDC");
   // const usdc = await USDC.deploy(0);
+  // await usdc.deployTransaction.wait()
+
   // await usdc.mint( deployer.address, initialMint );
-  const usdc = await USDC.attach("0x44575d9D850081C55526EAdB9448c1331C42543c");
+  const usdc = await USDC.attach("0xb09d57d62CD00d74aFA68F48cBABf00Af16569Ce");
   const usdcAddress = usdc.address;
   console.log("USDC deployed at: " + usdcAddress);
 
   // Deploy the Dove contract
   const DOVE = await ethers.getContractFactory("DoveERC20Token");
   // const dove = await DOVE.deploy();
-  const dove = await DOVE.attach('0xdD0AaC997D8a704C37b13f51981f62Df5476C3E9');
+  // await dove.deployTransaction.wait()
+
+  const dove = await DOVE.attach('0x91603d283e8616E453575F1a936aAf28fA7E0669');
   console.log("Dove deployed at: " + dove.address);
 
   // Deploy the sDOVE contract
   const sDOVE = await ethers.getContractFactory("sDove");
   // const sdove = await sDOVE.deploy();
-  const sdove = await sDOVE.attach('0x1Ff53A83E8F14D48470b27aE8C21fC005278b5Ef');
+  // await sdove.deployTransaction.wait()
+  const sdove = await sDOVE.attach('0x42EF53d7750cFc1b4B33c78d7B70776943f07Ac7');
   console.log("sDove deployed at: " + sdove.address);
 
   // Deploy the Treasury contract
   const Treasury = await ethers.getContractFactory("DoveTreasury");
   // const treasury = await Treasury.deploy(dove.address, usdcAddress, 0);
-  const treasury = await Treasury.attach('0x8FEdc0ebe8dbed8C34Bf6CFF713f25ec37cfb1B1');
+  // await treasury.deployTransaction.wait()
+  const treasury = await Treasury.attach('0x3381821F50D9992f0810cFb029D64da2A1515a33');
   console.log("Treasury deployed at: " + treasury.address);
 
   // Deploy the BondingCalculator contract
@@ -68,7 +74,8 @@ async function main() {
     "DoveBondingCalculator"
   );
   // const bondingCalculator = await BondingCalculator.deploy(dove.address);
-  const bondingCalculator = await BondingCalculator.attach('0x26DAF47DD85986143fCD1EA4896c72EddB498622');
+  // await bondingCalculator.deployTransaction.wait()
+  const bondingCalculator = await BondingCalculator.attach('0x59f59CE140426F6dA018575870146aF40BA34178');
   console.log("BondingCalculator deployed at: " + bondingCalculator.address);
 
   // Deploy the staking distributor contract
@@ -79,7 +86,8 @@ async function main() {
   //   epochDuration,
   //   firstEpochTimestamp
   // );
-  const stakingDistributor = await StakingDistributor.attach('0x85af7a56c96af8d83d056B36b31d0D03f7dbD33a');
+  // await stakingDistributor.deployTransaction.wait()
+  const stakingDistributor = await StakingDistributor.attach('0xEdb0AeA72B1A29fCC8890250Af2b8722610b02A8');
   console.log("StakingDistributor deployed at: " + stakingDistributor.address);
 
   // Deploy the staking contract
@@ -91,7 +99,8 @@ async function main() {
   //   1,
   //   firstEpochTimestamp
   // );
-  const staking = await Staking.attach('0xee36BfF8c2C201E9Ea4841a04233734e465bca0c');
+  // await staking.deployTransaction.wait()
+  const staking = await Staking.attach('0x5adE54D4c4E12814cd05DC2BfEa5B8f4a831afFe');
   console.log("Staking deployed at: " + staking.address);
 
   // Deploy staking warmup contract
@@ -100,7 +109,8 @@ async function main() {
   //   staking.address,
   //   sdove.address
   // );
-  const stakingWarmup = await StakingWarmup.attach('0x5Cb46dd0Ba561F8BADBe21056B177B8d0dBeb8c1');
+  // await stakingWarmup.deployTransaction.wait()
+  const stakingWarmup = await StakingWarmup.attach('0x5b967A18804A3f4095d5bd176b090fB737F3f486');
   console.log("StakingWarmup deployed at: " + stakingWarmup.address);
 
   // Deploy staking helper contract
@@ -109,12 +119,13 @@ async function main() {
   //   staking.address,
   //   dove.address
   // );
-  const stakingHelper = await StakingHelper.attach('0xF40Aa42b3540201046De236CAa88F4aCbc0cFAb6');
+  // await stakingHelper.deployTransaction.wait()
+  const stakingHelper = await StakingHelper.attach('0x66C207fFAC11dBCCeAb8a3548C6b052A7F4Bf16A');
   console.log("StakingHelper deployed at: " + stakingHelper.address);
 
   const { router: quickswapRouterAddr, factory: quickswapFactoryAddr } = {
-    factory: "0x6725F303b657a9451d8BA641348b6761A6CC7a17",
-    router: "0xD99D1c33F9fC3444f8101754aBC46c52416550D1",
+    factory: "0xF9db97007782ae35051a97790766531684C4943c",
+    router: "0x2fFAa0794bf59cA14F268A7511cB6565D55ed40b",
   };
 
   const UniswapV2Router = new ethers.Contract(
@@ -145,7 +156,8 @@ async function main() {
   //   deployer.address,
   //   deadAddress
   // );
-  const usdcBond = await Bonding.attach('0xB31A40d593DE854846e1c312FB0c84f970Fd5ECb');
+  // await usdcBond.deployTransaction.wait()
+  const usdcBond = await Bonding.attach('0x5957683484A78C0417f8010dA66D8b55C4745D66');
   console.log("USDC Bonding deployed at: " + usdcBond.address);
 
   // Deploy the DOVE-USDC Bonding contract
@@ -157,84 +169,92 @@ async function main() {
   //   deployer.address,
   //   bondingCalculator.address
   // );
-  const doveUsdcBond = await DoveUsdcBonding.attach('0x2199a9E5036Df3F018A54517bd0008010Ba27C7d');
+  // await doveUsdcBond.deployTransaction.wait()
+  const doveUsdcBond = await DoveUsdcBonding.attach('0x6677cE2649fD2ba092969758189F17765E4a1798');
   console.log("DOVE-USDC LP Bonding deployed at: " + doveUsdcBond.address);
 
-  /*
-  // queue and toggle USDC reserve depositor
-  await (await treasury.queue("0", usdcBond.address)).wait();
-  await treasury.toggle("0", usdcBond.address, deadAddress);
+  // // // queue and toggle USDC reserve depositor
+  // await (await treasury.queue("0", usdcBond.address)).wait();
+  // await treasury.toggle("0", usdcBond.address, bondingCalculator.address);
 
-  await (await treasury.queue("5", usdcBond.address)).wait();
-  await treasury.toggle("5", usdcBond.address, bondingCalculator.address);
+  // await (await treasury.queue("5", usdcBond.address)).wait();
+  // await treasury.toggle("5", usdcBond.address, bondingCalculator.address);
 
-  // queue and toggle deployer reserve depositor
-  await (await treasury.queue("0", deployer.address)).wait();
-  await treasury.toggle("0", deployer.address, deadAddress);
+  // // queue and toggle deployer reserve depositor
+  // await (await treasury.queue("0", deployer.address)).wait();
+  // await treasury.toggle("0", deployer.address, deadAddress);
 
   // queue and toggle deployer liquidity depositor
-  await (await treasury.queue("4", deployer.address)).wait();
-  await treasury.toggle("4", deployer.address, deadAddress);
+  // await (await treasury.queue("4", deployer.address)).wait();
+  // await treasury.toggle("4", deployer.address, deadAddress);
 
-  // queue and toggle DOVE-USDC liquidity depositor
-  await (await treasury.queue("4", doveUsdcBond.address)).wait();
-  await treasury.toggle("4", doveUsdcBond.address, deadAddress);
+  // // queue and toggle DOVE-USDC liquidity depositor
+  // await (await treasury.queue("4", doveUsdcBond.address)).wait();
+  // await treasury.toggle("4", doveUsdcBond.address, bondingCalculator.address);
 
-  // queue and toggle reward manager
-  await (await treasury.queue("8", stakingDistributor.address)).wait();
-  await treasury.toggle("8", stakingDistributor.address, deadAddress);
+  // // queue and toggle reward manager
+  // await (await treasury.queue("8", stakingDistributor.address)).wait();
+  // await treasury.toggle("8", stakingDistributor.address, bondingCalculator.address);
 
-  await usdcBond.initializeBondTerms(
-    usdcBondBCV,
-    minBondPrice,
-    maxBondPayout,
-    bondFee,
-    maxBondDebt,
-    initialBondDebt,
-    bondVestingLength
-  );
+  // await usdcBond.initializeBondTerms(
+  //   usdcBondBCV,
+  //   minBondPrice,
+  //   maxBondPayout,
+  //   bondFee,
+  //   maxBondDebt,
+  //   initialBondDebt,
+  //   bondVestingLength
+  // );
 
-  await doveUsdcBond.initializeBondTerms(
-    "100",
-    minBondPrice,
-    maxBondPayout,
-    bondFee,
-    maxBondDebt,
-    initialBondDebt,
-    bondVestingLength
-  );
+  // await doveUsdcBond.initializeBondTerms(
+  //   "40",
+  //   "1",
+  //   maxBondPayout,
+  //   bondFee,
+  //   maxBondDebt,
+  //   initialBondDebt,
+  //   bondVestingLength
+  // );
 
   
-  await usdcBond.setStaking(staking.address, stakingHelper.address);
-  await doveUsdcBond.setStaking(staking.address, stakingHelper.address);
+  // await usdcBond.setStaking(staking.address, stakingHelper.address);
+  // await doveUsdcBond.setStaking(staking.address, stakingHelper.address);
 
   // Initialize sDOVE and set the index
-  await sdove.initialize(staking.address);
-  await sdove.setIndex(initialIndex);
+  // await sdove.initialize(staking.address);
+  // await sdove.setIndex(initialIndex);
 
-  // set distributor contract and warmup contract
-  await staking.setContract("0", stakingDistributor.address);
-  await staking.setContract("1", stakingWarmup.address);
-  await staking.setWarmup(warmupPeriod);
+  // // set distributor contract and warmup contract
+  // await staking.setContract("0", stakingDistributor.address);
+  // await staking.setContract("1", stakingWarmup.address);
+  // await staking.setWarmup(warmupPeriod);
 
-  // Set treasury for DOVE token
-  await dove.setVault(treasury.address);
+  // // Set treasury for DOVE token
+  // await dove.setVault(treasury.address);
 
-  // Add staking contract as distributor recipient
-  await stakingDistributor.addRecipient(staking.address, initalRewardRate);
+  // // Add staking contract as distributor recipient
+  // await stakingDistributor.addRecipient(staking.address, initalRewardRate);
 
-  const lp = new ethers.Contract(lpAddress, UniswapV2PairABI, deployer);
+  // const lp = new ethers.Contract(lpAddress, UniswapV2PairABI, deployer);
 
-  await Promise.all([
-    (await usdc.approve(treasury.address, largeApproval)).wait(),
-    (await usdc.approve(usdcBond.address, largeApproval)).wait(),
-    (await usdc.approve(quickRouter.address, largeApproval)).wait(),
-    (await dove.approve(staking.address, largeApproval)).wait(),
-    (await dove.approve(stakingHelper.address, largeApproval)).wait(),
-    (await dove.approve(quickRouter.address, largeApproval)).wait(),
-    (await lp.approve(treasury.address, largeApproval)).wait(),
-  ]);
-*/
+  // await Promise.all([
+  //   (await usdc.approve(treasury.address, largeApproval)).wait(),
+  //   (await usdc.approve(usdcBond.address, largeApproval)).wait(),
+  //   (await usdc.approve(doveUsdcBond.address, largeApproval)).wait(),
+  //   (await usdc.approve(quickRouter.address, largeApproval)).wait(),
+  //   (await dove.approve(staking.address, largeApproval)).wait(),
+  //   (await dove.approve(stakingHelper.address, largeApproval)).wait(),
+  //   (await dove.approve(quickRouter.address, largeApproval)).wait(),
+  //   (await lp.approve(treasury.address, largeApproval)).wait(),
+  // ]);
+
+  //@dev just for testnet
+  await treasury.deposit('8667500000000000000000', usdc.address, '0');
+  // await stakingHelper.stake('10000000000', deployer.address);
+  // await usdcBond.deposit('1000000000000000000000', '60000', deployer.address );
+  // await doveUsdcBond.deposit('1000000000000000000000', '60000', deployer.address );
+
+  /*
   const IDO = await ethers.getContractFactory("DoveIDO");
 
   const ido = await IDO.deploy(
@@ -270,6 +290,7 @@ async function main() {
     listMap[w.toLowerCase()] = true;
   }
   await (await ido.whiteListBuyers(whitelist)).wait();
+  */
 
   console.log(
     JSON.stringify({
@@ -289,7 +310,7 @@ async function main() {
         USDC: usdcBond.address,
         DOVEUSDC: doveUsdcBond.address,
       },
-      IDO: ido.address,
+      // IDO: ido.address,
     })
   );
 }
