@@ -1,4 +1,5 @@
 require("dotenv").config();
+require("@nomiclabs/hardhat-waffle");
 
 const getHDWallet = () => {
   const { MNEMONIC, PRIVATE_KEY } = process.env;
@@ -20,19 +21,22 @@ module.exports = {
         version: '0.8.4',
       },
       {
-        version: '0.7.5',
+        version: "0.7.5",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
       },
-      {
-        version: '0.5.16', // for uniswap v2
-      },
-    ],
+    },
+  ],
   },
   networks: {
     'cronos-testnet': {
       url: "https://cronos-testnet-3.crypto.org:8545",
       accounts: getHDWallet(),
       gasPrice: 5000000000000,
-      gas: 2100000,
+      gas: 9999999,
     },
     'cronos-cassini': {
       url: "https://cassini.crypto.org:8545",
